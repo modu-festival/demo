@@ -12,9 +12,15 @@ interface StickyTabsProps {
   lang: Language;
   activeTab: string;
   onTabClick: (tabId: string) => void;
+  isUserInteraction?: boolean;
 }
 
-export function StickyTabs({ lang, activeTab, onTabClick }: StickyTabsProps) {
+export function StickyTabs({
+  lang,
+  activeTab,
+  onTabClick,
+  isUserInteraction = false,
+}: StickyTabsProps) {
   const [isSticky, setIsSticky] = useState(false);
   const tabsRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -44,14 +50,14 @@ export function StickyTabs({ lang, activeTab, onTabClick }: StickyTabsProps) {
   }, []);
 
   useEffect(() => {
-    if (activeButtonRef.current) {
+    if (activeButtonRef.current && isUserInteraction) {
       activeButtonRef.current.scrollIntoView({
         behavior: "smooth",
         block: "nearest",
         inline: "center",
       });
     }
-  }, [activeTab]);
+  }, [activeTab, isUserInteraction]);
 
   return (
     <>

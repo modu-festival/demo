@@ -15,6 +15,7 @@ import Footer from "@/components/Footer";
 export default function Festival() {
   const [language, setLanguage] = useState<Language>("ko");
   const [activeTab, setActiveTab] = useState<string>("gallery");
+  const [isUserInteraction, setIsUserInteraction] = useState<boolean>(false);
   const { toast } = useToast();
 
   const sectionRefs = {
@@ -64,6 +65,7 @@ export default function Festival() {
   }, []);
 
   const handleTabClick = (tabId: string) => {
+    setIsUserInteraction(true);
     const targetRef = sectionRefs[tabId as keyof typeof sectionRefs];
     if (targetRef.current) {
       const yOffset = -80;
@@ -140,6 +142,7 @@ export default function Festival() {
         lang={language}
         activeTab={activeTab}
         onTabClick={handleTabClick}
+        isUserInteraction={isUserInteraction}
       />
 
       <div id="gallery" ref={sectionRefs.gallery}>
