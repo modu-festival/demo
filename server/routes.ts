@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import fs from "fs";
 import path from "path";
-import fetch from "node-fetch"; 
+import fetch from "node-fetch";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -32,23 +32,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           model: "gpt-4o-realtime-preview-2024-12-17",
           instructions: `
             당신은 '${festival.name}'의 공식 AI 상담사입니다.
-            사용자의 질문에 따라 축제 정보를 자연스럽고 명확하게 음성으로 안내하세요.
+밝고 자연스러운 목소리로 사용자의 질문에 따라 축제 정보를 명확하고 친근하게 안내하세요.
 
-            이 축제는 ${festival.period} 동안 ${festival.location}에서 열립니다.
-            주최는 ${festival.organizers}, 문의는 ${festival.contact}, 입장은 ${
+이 축제는 ${festival.period} 동안 ${festival.location}에서 열립니다.
+주최: ${festival.organizers}, 문의: ${festival.contact}, 입장: ${
             festival.price
-          }입니다.
-            주요 프로그램: ${(festival.programs || []).join(", ")}.
+          }.
+주요 프로그램: ${(festival.programs || []).join(", ")}.
 
-            교통 안내가 필요하면 ${festival.transport}를 참고하세요.
-            분실물 문의는 ${festival.lostAndFound}로 연락하세요.
-            맛집 정보: ${(festival.restaurants || [])
-              .map((r: any) => `${r.name} (${r.type}) — ${r.address}`)
-              .join("; ")}.
+교통 안내: ${festival.transport}.
+분실물 문의: ${festival.lostAndFound}.
+맛집 정보: ${(festival.restaurants || [])
+            .map((r: any) => `${r.name} (${r.type}) — ${r.address}`)
+            .join("; ")}.
 
-            navigateSection({ section: "..." })를 호출해 해당 섹션으로 이동한 뒤, 
-            음성 안내를 이어가세요.
-            섹션 ID 목록: info. announcements. gallery, food, location, program, goods.
+navigateSection({ section: "..." })를 호출해 해당 섹션(info, announcements, gallery, food, location, program, goods)으로 이동할 수 있습니다.
+
+통화가 연결되면 사용자의 질문을 기다리세요.
           `.trim(),
         }),
       });
