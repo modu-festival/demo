@@ -8,7 +8,7 @@ interface GoodsSectionProps {
 
 export function GoodsSection({ lang }: GoodsSectionProps) {
   return (
-    <div className="bg-white px-6 py-8 border-t border-gray-200">
+    <div className="bg-white px-6 py-8">
       <h2 className="text-xl font-bold text-gray-900 mb-4">{getTranslation(lang, "goods")}</h2>
       
       <div className="grid grid-cols-2 gap-4">
@@ -27,8 +27,8 @@ export function GoodsSection({ lang }: GoodsSectionProps) {
               />
             </div>
             <div className="p-3">
-              <h3 className="font-semibold text-sm text-gray-900 mb-1">{item.name[lang]}</h3>
-              <p className="text-sm font-medium text-modu-red">{item.price}</p>
+              <h3 className="font-semibold text-[13px] text-gray-900">{item.name[lang]}</h3>
+              <p className="text-[16px] font-semibold text-gray-900">{item.price}</p>
             </div>
           </div>
         ))}
