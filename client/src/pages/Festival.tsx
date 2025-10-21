@@ -16,6 +16,7 @@ export default function Festival() {
   const [language, setLanguage] = useState<Language>("ko");
   const [activeTab, setActiveTab] = useState<string>("gallery");
   const [isUserInteraction, setIsUserInteraction] = useState<boolean>(false);
+  const [isScrolling, setIsScrolling] = useState<boolean>(false);
   const { toast } = useToast();
 
   const sectionRefs = {
@@ -34,6 +35,9 @@ export default function Festival() {
     };
 
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      // 스크롤 중일 때는 observer 비활성화
+      if (isScrolling) return;
+
       const visibleEntries = entries.filter((entry) => entry.isIntersecting);
 
       if (visibleEntries.length > 0) {
@@ -62,10 +66,13 @@ export default function Festival() {
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [isScrolling]);
 
   const handleTabClick = (tabId: string) => {
     setIsUserInteraction(true);
+    setIsScrolling(true);
+    setActiveTab(tabId); // 즉시 탭 상태 업데이트
+
     const targetRef = sectionRefs[tabId as keyof typeof sectionRefs];
     if (targetRef.current) {
       const yOffset = -80;
@@ -73,7 +80,13 @@ export default function Festival() {
         targetRef.current.getBoundingClientRect().top +
         window.scrollY +
         yOffset;
+
       window.scrollTo({ top: y, behavior: "smooth" });
+
+      // 스크롤 완료 후 observer 다시 활성화
+      setTimeout(() => {
+        setIsScrolling(false);
+      }, 1000); // 스크롤 애니메이션 시간 고려
     }
   };
 
