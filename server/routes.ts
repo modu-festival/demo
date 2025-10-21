@@ -41,6 +41,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             주요 프로그램: ${(festival.programs || []).join(", ")}.
 
             교통 안내가 필요하면 ${festival.transport}를 참고하세요.
+            분실물 문의는 ${festival.lostAndFound}로 연락하세요.
             맛집 정보: ${(festival.restaurants || [])
               .map((r: any) => `${r.name} (${r.type}) — ${r.address}`)
               .join("; ")}.
