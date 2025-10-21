@@ -39,30 +39,22 @@ export function HeroSection({
 
       {/* Content overlay */}
       <div className="relative z-10 flex h-full flex-col items-center justify-end pb-10">
-        {/* Glassmorphism AI Call Button */}
         <Button
           data-testid="button-ai-call"
-          onClick={handleCallClick}
+          onClick={isConnected ? endCall : handleCallClick}
           size="lg"
           disabled={isConnecting}
-          className="mb-4 backdrop-blur-md bg-white/20 border-none text-white font-bold text-base px-10 py-3 shadow-2xl no-default-hover-elevate no-default-active-elevate"
+          className={`mb-4 backdrop-blur-md border-none font-bold text-base px-10 py-3 shadow-2xl no-default-hover-elevate no-default-active-elevate transition-all duration-300 ${
+            isConnected
+              ? "bg-red-500/60 hover:bg-red-500/70 text-white"
+              : "bg-white/20 hover:bg-white/30 text-white"
+          }`}
         >
           <Phone className="mr-2 h-5 w-5" />
           {isConnected
             ? getTranslation(lang, "aiCallEnd") ?? "통화 종료"
             : getTranslation(lang, "aiCallButton")}
         </Button>
-
-        {/* 통화 종료 버튼 */}
-        {isConnected && (
-          <Button
-            onClick={endCall}
-            size="sm"
-            className="bg-red-500 text-white font-semibold mt-2 hover:bg-red-600"
-          >
-            통화 종료
-          </Button>
-        )}
 
         {/* Language Selector */}
         <div className="flex items-center justify-center text-white text-[13px] mt-2">
