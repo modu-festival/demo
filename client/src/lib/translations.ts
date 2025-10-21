@@ -6,12 +6,13 @@ export const translations = {
   ko: {
     aiCallButton: "AI 상담사와 통화하기",
     announcements: "공지사항",
+    urgentCancel: "우천 취소",
     gallery: "갤러리",
     food: "먹거리 안내",
     location: "위치 안내",
     program: "프로그램 안내",
     goods: "굿즈 안내",
-    downloadFoodPamphlet: "먹거리 안내 팜플렛 저장",
+    downloadFoodPamphlet: "먹거리 안내 팜플렛 다운로드",
     downloadProgramPamphlet: "프로그램 팜플렛 다운로드",
     downloadFullTimetable: "전체 프로그램 타임테이블 다운로드",
     all: "전체",
@@ -28,13 +29,15 @@ export const translations = {
     priceLabel: "요금",
     programSchedule: "프로그램 일정",
     session: "회차",
-    downloadCategoryDetail: "상세정보 다운로드",
-    may: "5월",
+    downloadCategoryDetail: "타임테이블 팜플렛 다운로드",
+    may: "9월",
     day: "일",
+    programCountUnit: "개 프로그램",
   },
   en: {
     aiCallButton: "Call AI Consultant",
     announcements: "Announcements",
+    urgentCancel: "Weather Cancellation",
     gallery: "Gallery",
     food: "Food Guide",
     location: "Location",
@@ -60,10 +63,12 @@ export const translations = {
     downloadCategoryDetail: "Download Details",
     may: "May",
     day: "",
+    programCountUnit: " programs",
   },
   zh: {
     aiCallButton: "与AI顾问通话",
     announcements: "公告",
+    urgentCancel: "因雨取消",
     gallery: "画廊",
     food: "美食指南",
     location: "位置",
@@ -89,10 +94,12 @@ export const translations = {
     downloadCategoryDetail: "下载详情",
     may: "5月",
     day: "日",
+    programCountUnit: "个节目",
   },
   ja: {
     aiCallButton: "AIコンサルタントと通話",
     announcements: "お知らせ",
+    urgentCancel: "雨天中止",
     gallery: "ギャラリー",
     food: "グルメガイド",
     location: "場所",
@@ -118,10 +125,14 @@ export const translations = {
     downloadCategoryDetail: "詳細情報ダウンロード",
     may: "5月",
     day: "日",
+    programCountUnit: "個プログラム",
   },
 };
 
-export function getTranslation(lang: Language, key: keyof typeof translations.ko): string {
+export function getTranslation(
+  lang: Language,
+  key: keyof typeof translations.ko
+): string {
   return translations[lang][key] || translations.ko[key];
 }
 
