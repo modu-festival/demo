@@ -3,7 +3,7 @@ import type { FestivalInfo, Announcement, GalleryItem, FoodZone, ProgramCategory
 export const festivalInfo: FestivalInfo = {
   name: {
     ko: "20주년 시흥 갯골축제",
-    en: "Modu Festival",
+    en: "Siheung Gaetgol Festival",
     zh: "大家的节日",
     ja: "みんなの祭り",
   },
@@ -21,7 +21,7 @@ export const festivalInfo: FestivalInfo = {
   },
   price: {
     ko: "무료 (일부체험프로그램 유료)",
-    en: "Free Admission",
+    en: "Free Admission (some experience programs paid)",
     zh: "免费入场",
     ja: "無料入場",
   },
@@ -37,7 +37,7 @@ export const announcements: Announcement[] = [
       ja: "フェスティバル開催のお知らせ",
     },
     content: {
-      ko: "햔재 비로 인해 열기구 / 소금에 빠지새오 / 갯골버스킹 오전 진행이 불가하며 갯골요가 / 염부체험 우천 취소입니다.",
+      ko: "햔재 비로 인해 열기구 / 소금에 빠지새우 / 갯골버스킹 오전 진행이 불가하며 갯골요가 / 염부체험 우천 취소입니다.",
       en: "The festival will be held for 3 days from May 26 to 28, 2025. We look forward to your interest and participation.",
       zh: "节日将于2025年5月26日至28日举行，为期3天。期待您的关注和参与。",
       ja: "2025年5月26日から28日までの3日間開催されます。皆様のご関心とご参加をお待ちしております。",
@@ -259,8 +259,8 @@ export const programCategories: ProgramCategory[] = [
           ja: "自由な雰囲気のストリートパフォーマンス",
         },
         badge: {
-          ko: "상시",
-          en: "Always",
+          ko: "무료",
+          en: "Free",
           zh: "常设",
           ja: "常設",
         },
