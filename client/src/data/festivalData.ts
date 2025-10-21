@@ -2,7 +2,7 @@ import type { FestivalInfo, Announcement, GalleryItem, FoodZone, ProgramCategory
 
 export const festivalInfo: FestivalInfo = {
   name: {
-    ko: "모두의 축제",
+    ko: "20주년 시흥 갯골축제",
     en: "Modu Festival",
     zh: "大家的节日",
     ja: "みんなの祭り",
@@ -20,7 +20,7 @@ export const festivalInfo: FestivalInfo = {
     ja: "ソウル漢江公園汝矣島地区",
   },
   price: {
-    ko: "무료 입장",
+    ko: "무료 (일부체험프로그램 유료)",
     en: "Free Admission",
     zh: "免费入场",
     ja: "無料入場",
@@ -31,35 +31,35 @@ export const announcements: Announcement[] = [
   {
     id: "1",
     title: {
-      ko: "축제 개최 안내",
+      ko: "우천 취소 안내",
       en: "Festival Opening Notice",
       zh: "节日开幕通知",
       ja: "フェスティバル開催のお知らせ",
     },
     content: {
-      ko: "2025년 5월 26일부터 28일까지 3일간 진행됩니다. 많은 관심과 참여 부탁드립니다.",
+      ko: "햔재 비로 인해 열기구 / 소금에 빠지새오 / 갯골버스킹 오전 진행이 불가하며 갯골요가 / 염부체험 우천 취소입니다.",
       en: "The festival will be held for 3 days from May 26 to 28, 2025. We look forward to your interest and participation.",
       zh: "节日将于2025年5月26日至28日举行，为期3天。期待您的关注和参与。",
       ja: "2025年5月26日から28日までの3日間開催されます。皆様のご関心とご参加をお待ちしております。",
     },
     date: "2025-05-01",
   },
-  {
-    id: "2",
-    title: {
-      ko: "주차 및 교통 안내",
-      en: "Parking and Transportation Guide",
-      zh: "停车和交通指南",
-      ja: "駐車と交通案内",
-    },
-    content: {
-      ko: "축제 기간 중 주차장이 혼잡할 수 있으니 대중교통 이용을 권장합니다.",
-      en: "Parking lots may be crowded during the festival. We recommend using public transportation.",
-      zh: "节日期间停车场可能会很拥挤。建议使用公共交通。",
-      ja: "フェスティバル期間中は駐車場が混雑する可能性があります。公共交通機関のご利用をお勧めします。",
-    },
-    date: "2025-05-10",
-  },
+  // {
+  //   id: "2",
+  //   title: {
+  //     ko: "주차 및 교통 안내",
+  //     en: "Parking and Transportation Guide",
+  //     zh: "停车和交通指南",
+  //     ja: "駐車と交通案内",
+  //   },
+  //   content: {
+  //     ko: "축제 기간 중 주차장이 혼잡할 수 있으니 대중교통 이용을 권장합니다.",
+  //     en: "Parking lots may be crowded during the festival. We recommend using public transportation.",
+  //     zh: "节日期间停车场可能会很拥挤。建议使用公共交通。",
+  //     ja: "フェスティバル期間中は駐車場が混雑する可能性があります。公共交通機関のご利用をお勧めします。",
+  //   },
+  //   date: "2025-05-10",
+  // },
 ];
 
 export const galleryItems: GalleryItem[] = [
@@ -616,7 +616,7 @@ export const goodsItems: GoodsItem[] = [
   {
     id: "g1",
     name: {
-      ko: "축제 티셔츠",
+      ko: "해로토로 키링 인형",
       en: "Festival T-Shirt",
       zh: "节日T恤",
       ja: "フェスティバルTシャツ",
@@ -627,7 +627,7 @@ export const goodsItems: GoodsItem[] = [
   {
     id: "g2",
     name: {
-      ko: "에코백",
+      ko: "해로토로 크로스백 파우치",
       en: "Eco Bag",
       zh: "环保袋",
       ja: "エコバッグ",
