@@ -5,6 +5,7 @@ export type { Language };
 export const translations = {
   ko: {
     aiCallButton: "AI 상담사와 통화하기",
+    aiCallEnd: "통화 종료",
     announcements: "공지사항",
     urgentCancel: "우천 취소",
     gallery: "갤러리",
@@ -36,6 +37,7 @@ export const translations = {
   },
   en: {
     aiCallButton: "Call AI Consultant",
+    aiCallEnd: "End Call",
     announcements: "Announcements",
     urgentCancel: "Weather Cancellation",
     gallery: "Gallery",
@@ -67,6 +69,7 @@ export const translations = {
   },
   zh: {
     aiCallButton: "与AI顾问通话",
+    aiCallEnd: "结束通话",
     announcements: "公告",
     urgentCancel: "因雨取消",
     gallery: "画廊",
@@ -98,6 +101,7 @@ export const translations = {
   },
   ja: {
     aiCallButton: "AIコンサルタントと通話",
+    aiCallEnd: "通話終了",
     announcements: "お知らせ",
     urgentCancel: "雨天中止",
     gallery: "ギャラリー",
