@@ -1,4 +1,4 @@
-import type { FestivalInfo, Announcement, GalleryItem, FoodZone, Program, GoodsItem, LocationInfo } from "@shared/schema";
+import type { FestivalInfo, Announcement, GalleryItem, FoodZone, ProgramCategory, GoodsItem, LocationInfo } from "@shared/schema";
 
 export const festivalInfo: FestivalInfo = {
   name: {
@@ -222,97 +222,393 @@ export const foodZones: FoodZone[] = [
   },
 ];
 
-export const programs: Program[] = [
+export const programCategories: ProgramCategory[] = [
   {
-    id: "p1",
-    title: {
-      ko: "개막 공연",
-      en: "Opening Performance",
-      zh: "开幕演出",
-      ja: "オープニングパフォーマンス",
+    id: "performance",
+    name: {
+      ko: "공연 프로그램",
+      en: "Performance Program",
+      zh: "演出节目",
+      ja: "公演プログラム",
     },
-    date: "2025-05-26",
-    time: "18:00",
-    location: {
-      ko: "메인 스테이지",
-      en: "Main Stage",
-      zh: "主舞台",
-      ja: "メインステージ",
-    },
-    description: {
-      ko: "화려한 개막 공연으로 축제의 시작을 알립니다.",
-      en: "A spectacular opening performance to kick off the festival.",
-      zh: "以华丽的开幕演出开始节日。",
-      ja: "華やかなオープニングパフォーマンスでフェスティバルの始まりを告げます。",
-    },
+    performances: [
+      {
+        id: "gaetgol-busking",
+        name: {
+          ko: "갯골버스킹",
+          en: "Gaetgol Busking",
+          zh: "盖特谷街头表演",
+          ja: "ゲットゴルバスキング",
+        },
+        location: {
+          ko: "갯골광장",
+          en: "Gaetgol Square",
+          zh: "盖特谷广场",
+          ja: "ゲットゴル広場",
+        },
+        price: {
+          ko: "무료",
+          en: "Free",
+          zh: "免费",
+          ja: "無料",
+        },
+        description: {
+          ko: "자유로운 분위기의 거리 공연",
+          en: "Free-spirited street performances",
+          zh: "自由氛围的街头表演",
+          ja: "自由な雰囲気のストリートパフォーマンス",
+        },
+        badge: {
+          ko: "상시",
+          en: "Always",
+          zh: "常设",
+          ja: "常設",
+        },
+        schedule: [
+          {
+            date: "2025-05-26",
+            sessions: [{ sessionNumber: 1, time: "14:00 ~ 16:00" }],
+          },
+          {
+            date: "2025-05-27",
+            sessions: [
+              { sessionNumber: 1, time: "14:00 ~ 17:00" },
+              { sessionNumber: 2, time: "18:00 ~ 20:00" },
+            ],
+          },
+          {
+            date: "2025-05-28",
+            sessions: [{ sessionNumber: 1, time: "15:00 ~ 17:00" }],
+          },
+        ],
+      },
+      {
+        id: "gaetgol-chunmong",
+        name: {
+          ko: "갯골 춘몽",
+          en: "Gaetgol Chunmong",
+          zh: "盖特谷春梦",
+          ja: "ゲットゴル春夢",
+        },
+        location: {
+          ko: "야외무대",
+          en: "Outdoor Stage",
+          zh: "户外舞台",
+          ja: "屋外ステージ",
+        },
+        price: {
+          ko: "5,000원",
+          en: "5,000 KRW",
+          zh: "5,000韩元",
+          ja: "5,000ウォン",
+        },
+        description: {
+          ko: "전통과 현대가 어우러진 특별 공연",
+          en: "Special performance blending tradition and modernity",
+          zh: "传统与现代融合的特别演出",
+          ja: "伝統と現代が融合した特別公演",
+        },
+        schedule: [
+          {
+            date: "2025-05-27",
+            sessions: [{ sessionNumber: 1, time: "19:00 ~ 20:30" }],
+          },
+          {
+            date: "2025-05-28",
+            sessions: [{ sessionNumber: 1, time: "16:00 ~ 17:30" }],
+          },
+        ],
+      },
+      {
+        id: "salt-warehouse-puppet",
+        name: {
+          ko: "소금창고 인형극장",
+          en: "Salt Warehouse Puppet Theater",
+          zh: "盐仓木偶剧场",
+          ja: "塩倉庫人形劇場",
+        },
+        location: {
+          ko: "소금창고",
+          en: "Salt Warehouse",
+          zh: "盐仓",
+          ja: "塩倉庫",
+        },
+        price: {
+          ko: "무료",
+          en: "Free",
+          zh: "免费",
+          ja: "無料",
+        },
+        description: {
+          ko: "어린이를 위한 즐거운 인형극",
+          en: "Delightful puppet show for children",
+          zh: "儿童趣味木偶戏",
+          ja: "子供のための楽しい人形劇",
+        },
+        schedule: [
+          {
+            date: "2025-05-26",
+            sessions: [
+              { sessionNumber: 1, time: "11:00 ~ 12:00" },
+              { sessionNumber: 2, time: "15:00 ~ 16:00" },
+            ],
+          },
+          {
+            date: "2025-05-27",
+            sessions: [
+              { sessionNumber: 1, time: "11:00 ~ 12:00" },
+              { sessionNumber: 2, time: "15:00 ~ 16:00" },
+            ],
+          },
+          {
+            date: "2025-05-28",
+            sessions: [{ sessionNumber: 1, time: "11:00 ~ 12:00" }],
+          },
+        ],
+      },
+      {
+        id: "hundred-guitars",
+        name: {
+          ko: "100인의 기타 둥둥",
+          en: "100 Guitars Dongdong",
+          zh: "百人吉他咚咚",
+          ja: "100人のギタードンドン",
+        },
+        location: {
+          ko: "메인 스테이지",
+          en: "Main Stage",
+          zh: "主舞台",
+          ja: "メインステージ",
+        },
+        price: {
+          ko: "무료",
+          en: "Free",
+          zh: "免费",
+          ja: "無料",
+        },
+        description: {
+          ko: "100명의 기타리스트가 함께하는 대규모 공연",
+          en: "Large-scale performance with 100 guitarists",
+          zh: "100位吉他手共同演出的大型表演",
+          ja: "100人のギタリストによる大規模公演",
+        },
+        schedule: [
+          {
+            date: "2025-05-27",
+            sessions: [{ sessionNumber: 1, time: "16:00 ~ 18:00" }],
+          },
+        ],
+      },
+      {
+        id: "forest-music-festival",
+        name: {
+          ko: "나무숲 음악제",
+          en: "Forest Music Festival",
+          zh: "森林音乐节",
+          ja: "森林音楽祭",
+        },
+        location: {
+          ko: "나무숲 야외무대",
+          en: "Forest Outdoor Stage",
+          zh: "森林户外舞台",
+          ja: "森林屋外ステージ",
+        },
+        price: {
+          ko: "10,000원",
+          en: "10,000 KRW",
+          zh: "10,000韩元",
+          ja: "10,000ウォン",
+        },
+        description: {
+          ko: "자연 속에서 즐기는 음악 축제",
+          en: "Music festival in nature",
+          zh: "在自然中享受的音乐节",
+          ja: "自然の中で楽しむ音楽祭",
+        },
+        schedule: [
+          {
+            date: "2025-05-26",
+            sessions: [{ sessionNumber: 1, time: "17:00 ~ 19:00" }],
+          },
+          {
+            date: "2025-05-28",
+            sessions: [{ sessionNumber: 1, time: "14:00 ~ 16:00" }],
+          },
+        ],
+      },
+    ],
   },
   {
-    id: "p2",
-    title: {
-      ko: "K-POP 콘서트",
-      en: "K-POP Concert",
-      zh: "K-POP 演唱会",
-      ja: "K-POPコンサート",
+    id: "special",
+    name: {
+      ko: "특별 프로그램",
+      en: "Special Program",
+      zh: "特别节目",
+      ja: "特別プログラム",
     },
-    date: "2025-05-26",
-    time: "20:00",
-    location: {
-      ko: "메인 스테이지",
-      en: "Main Stage",
-      zh: "主舞台",
-      ja: "メインステージ",
-    },
+    performances: [
+      {
+        id: "opening-ceremony",
+        name: {
+          ko: "개막식",
+          en: "Opening Ceremony",
+          zh: "开幕式",
+          ja: "開会式",
+        },
+        location: {
+          ko: "메인 스테이지",
+          en: "Main Stage",
+          zh: "主舞台",
+          ja: "メインステージ",
+        },
+        price: {
+          ko: "무료",
+          en: "Free",
+          zh: "免费",
+          ja: "無料",
+        },
+        description: {
+          ko: "모두의 축제 개막을 알리는 특별 행사",
+          en: "Special event announcing the opening of Modu Festival",
+          zh: "宣布大家节日开幕的特别活动",
+          ja: "みんなの祭り開幕を告げる特別イベント",
+        },
+        schedule: [
+          {
+            date: "2025-05-26",
+            sessions: [{ sessionNumber: 1, time: "10:00 ~ 11:00" }],
+          },
+        ],
+      },
+      {
+        id: "fireworks",
+        name: {
+          ko: "불꽃놀이",
+          en: "Fireworks",
+          zh: "焰火表演",
+          ja: "花火大会",
+        },
+        location: {
+          ko: "한강 수변",
+          en: "Han River Waterfront",
+          zh: "汉江水边",
+          ja: "漢江水辺",
+        },
+        price: {
+          ko: "무료",
+          en: "Free",
+          zh: "免费",
+          ja: "無料",
+        },
+        description: {
+          ko: "화려한 불꽃으로 밤하늘을 수놓는 특별 이벤트",
+          en: "Special event painting the night sky with brilliant fireworks",
+          zh: "用绚丽烟花装点夜空的特别活动",
+          ja: "華やかな花火で夜空を彩る特別イベント",
+        },
+        schedule: [
+          {
+            date: "2025-05-28",
+            sessions: [{ sessionNumber: 1, time: "20:00 ~ 20:30" }],
+          },
+        ],
+      },
+    ],
   },
   {
-    id: "p3",
-    title: {
-      ko: "전통 공연",
-      en: "Traditional Performance",
-      zh: "传统表演",
-      ja: "伝統芸能",
+    id: "participation",
+    name: {
+      ko: "참여 체험 프로그램",
+      en: "Participation Experience Program",
+      zh: "参与体验节目",
+      ja: "参加体験プログラム",
     },
-    date: "2025-05-27",
-    time: "15:00",
-    location: {
-      ko: "야외 무대",
-      en: "Outdoor Stage",
-      zh: "户外舞台",
-      ja: "屋外ステージ",
-    },
-  },
-  {
-    id: "p4",
-    title: {
-      ko: "인디 밴드 공연",
-      en: "Indie Band Performance",
-      zh: "独立乐队演出",
-      ja: "インディーバンドパフォーマンス",
-    },
-    date: "2025-05-27",
-    time: "19:00",
-    location: {
-      ko: "메인 스테이지",
-      en: "Main Stage",
-      zh: "主舞台",
-      ja: "メインステージ",
-    },
-  },
-  {
-    id: "p5",
-    title: {
-      ko: "폐막 공연",
-      en: "Closing Performance",
-      zh: "闭幕演出",
-      ja: "クロージングパフォーマンス",
-    },
-    date: "2025-05-28",
-    time: "21:00",
-    location: {
-      ko: "메인 스테이지",
-      en: "Main Stage",
-      zh: "主舞台",
-      ja: "メインステージ",
-    },
+    performances: [
+      {
+        id: "craft-workshop",
+        name: {
+          ko: "전통 공예 체험",
+          en: "Traditional Craft Workshop",
+          zh: "传统工艺体验",
+          ja: "伝統工芸体験",
+        },
+        location: {
+          ko: "체험관",
+          en: "Experience Hall",
+          zh: "体验馆",
+          ja: "体験館",
+        },
+        price: {
+          ko: "5,000원",
+          en: "5,000 KRW",
+          zh: "5,000韩元",
+          ja: "5,000ウォン",
+        },
+        description: {
+          ko: "전통 공예품을 직접 만들어보는 체험",
+          en: "Hands-on experience making traditional crafts",
+          zh: "亲手制作传统工艺品的体验",
+          ja: "伝統工芸品を直接作る体験",
+        },
+        schedule: [
+          {
+            date: "2025-05-26",
+            sessions: [
+              { sessionNumber: 1, time: "10:00 ~ 12:00" },
+              { sessionNumber: 2, time: "14:00 ~ 16:00" },
+            ],
+          },
+          {
+            date: "2025-05-27",
+            sessions: [
+              { sessionNumber: 1, time: "10:00 ~ 12:00" },
+              { sessionNumber: 2, time: "14:00 ~ 16:00" },
+            ],
+          },
+          {
+            date: "2025-05-28",
+            sessions: [{ sessionNumber: 1, time: "10:00 ~ 12:00" }],
+          },
+        ],
+      },
+      {
+        id: "dance-together",
+        name: {
+          ko: "함께 춤춰요",
+          en: "Let's Dance Together",
+          zh: "一起跳舞",
+          ja: "一緒に踊ろう",
+        },
+        location: {
+          ko: "야외 광장",
+          en: "Outdoor Plaza",
+          zh: "户外广场",
+          ja: "屋外広場",
+        },
+        price: {
+          ko: "무료",
+          en: "Free",
+          zh: "免费",
+          ja: "無料",
+        },
+        description: {
+          ko: "누구나 참여 가능한 단체 댄스 프로그램",
+          en: "Group dance program open to everyone",
+          zh: "任何人都可以参加的集体舞蹈节目",
+          ja: "誰でも参加できる団体ダンスプログラム",
+        },
+        schedule: [
+          {
+            date: "2025-05-27",
+            sessions: [{ sessionNumber: 1, time: "13:00 ~ 14:00" }],
+          },
+          {
+            date: "2025-05-28",
+            sessions: [{ sessionNumber: 1, time: "13:00 ~ 14:00" }],
+          },
+        ],
+      },
+    ],
   },
 ];
 

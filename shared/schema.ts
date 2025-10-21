@@ -58,17 +58,38 @@ export const foodZoneSchema = z.object({
 
 export type FoodZone = z.infer<typeof foodZoneSchema>;
 
-// Program
-export const programSchema = z.object({
-  id: z.string(),
-  title: z.record(z.string()),
+// Performance schedule
+export const performanceScheduleSchema = z.object({
   date: z.string(),
-  time: z.string(),
-  location: z.record(z.string()),
-  description: z.record(z.string()).optional(),
+  sessions: z.array(z.object({
+    sessionNumber: z.number(),
+    time: z.string(),
+  })),
 });
 
-export type Program = z.infer<typeof programSchema>;
+export type PerformanceSchedule = z.infer<typeof performanceScheduleSchema>;
+
+// Performance (individual show within a program category)
+export const performanceSchema = z.object({
+  id: z.string(),
+  name: z.record(z.string()),
+  location: z.record(z.string()),
+  price: z.record(z.string()),
+  description: z.record(z.string()).optional(),
+  schedule: z.array(performanceScheduleSchema),
+  badge: z.record(z.string()).optional(),
+});
+
+export type Performance = z.infer<typeof performanceSchema>;
+
+// Program category
+export const programCategorySchema = z.object({
+  id: z.string(),
+  name: z.record(z.string()),
+  performances: z.array(performanceSchema),
+});
+
+export type ProgramCategory = z.infer<typeof programCategorySchema>;
 
 // Goods item
 export const goodsItemSchema = z.object({

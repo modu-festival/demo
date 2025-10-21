@@ -28,17 +28,24 @@ export default function Festival() {
   useEffect(() => {
     const observerOptions = {
       root: null,
-      rootMargin: "-100px 0px -50% 0px",
-      threshold: 0,
+      rootMargin: "-120px 0px -40% 0px",
+      threshold: [0, 0.25, 0.5, 0.75, 1],
     };
 
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const sectionId = entry.target.id as string;
+      // Find the entry with the highest intersection ratio
+      const visibleEntries = entries.filter((entry) => entry.isIntersecting);
+      
+      if (visibleEntries.length > 0) {
+        const mostVisible = visibleEntries.reduce((prev, current) => {
+          return current.intersectionRatio > prev.intersectionRatio ? current : prev;
+        });
+        
+        const sectionId = mostVisible.target.id as string;
+        if (sectionId) {
           setActiveTab(sectionId);
         }
-      });
+      }
     };
 
     const observer = new IntersectionObserver(observerCallback, observerOptions);
