@@ -44,20 +44,20 @@ export function HeroSection({
         </Button>
 
         {/* Language Selector - Text style */}
-        <div className="flex items-center justify-center text-white text-caption_sb_11">
+        <div className="flex items-center justify-center text-white text-[13px]">
           {languages.map((language, index) => (
             <div key={language} className="flex items-center">
               <button
                 onClick={() => onLanguageChange(language)}
                 className={`px-3 py-1 hover:text-white transition-colors duration-200 ${
-                  lang === language ? "text-white font-medium" : "text-white/80"
+                  lang === language ? "text-white font-semibold" : "font-medium text-white/80"
                 }`}
               >
                 {languageNames[language]}
               </button>
 
               {index < languages.length - 1 && (
-                <div className="h-3 w-[1.1px] bg-white/60 mx-0.5" />
+                <div className="h-3 w-[1px] bg-white/60 mx-0.5" />
               )}
             </div>
           ))}
