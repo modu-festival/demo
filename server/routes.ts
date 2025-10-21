@@ -47,7 +47,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             navigateSection({ section: "..." })를 호출해 해당 섹션으로 이동한 뒤, 
             음성 안내를 이어가세요.
-            섹션 ID 목록: gallery, food, location, program, goods.
+            섹션 ID 목록: info. announcements. gallery, food, location, program, goods.
           `.trim(),
         }),
       });

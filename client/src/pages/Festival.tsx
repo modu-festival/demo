@@ -149,8 +149,15 @@ export default function Festival() {
         onAICall={handleAICall}
         onLanguageChange={setLanguage}
       />
-      <FestivalInfo lang={language} />
-      <AnnouncementsSection lang={language} />
+
+      <div id="info">
+        <FestivalInfo lang={language} />
+      </div>
+
+      <div id="announcements">
+        <AnnouncementsSection lang={language} />
+      </div>
+
       <StickyTabs
         lang={language}
         activeTab={activeTab}

@@ -1,9 +1,5 @@
 import { useRef, useState } from "react";
 
-/**
- * 함수 맵 타입 정의
- * - navigateSection: 특정 섹션으로 스크롤 이동
- */
 type FnMap = {
   navigateSection: (args: { section: string }) => {
     success: boolean;
@@ -20,49 +16,53 @@ export function useRealtimeAI() {
   const ringRef = useRef<HTMLAudioElement | null>(null);
 
   /**
-   * AI가 호출 가능한 함수 모음
+   * ✅ AI가 호출 가능한 함수 (scroll 보정 포함)
    */
   const fns: FnMap = {
     navigateSection: ({ section }) => {
       const el = document.getElementById(section);
       if (!el) return { success: false };
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      const rect = el.getBoundingClientRect();
+      const elementTop = rect.top + window.scrollY;
+      const elementHeight = rect.height;
+
+      const offset = elementTop - window.innerHeight / 2 + elementHeight / 2; // 화면 중앙 정렬
+
+      window.scrollTo({
+        top: offset,
+        behavior: "smooth",
+      });
+
       return { success: true, section };
     },
   };
 
-  /**
-   * AI 상담 연결 시작 (WebRTC)
-   */
   async function startCall() {
     setIsConnecting(true);
 
-    // ring.mp3 재생 시작
-    const ring = new Audio(".public/assets/ring.mp3");
+    // 연결 사운드
+    const ring = new Audio("/ring.mp3");
     ring.loop = true;
     ring.play().catch((err) => console.warn("Ring sound play failed:", err));
     ringRef.current = ring;
 
     try {
-      // 서버에서 ephemeral key 발급
       const tokenRes = await fetch("/session");
       const data = await tokenRes.json();
       const EPHEMERAL_KEY: string | undefined = data?.client_secret?.value;
       if (!EPHEMERAL_KEY)
         throw new Error("No ephemeral key received from server");
 
-      // PeerConnection 생성
       const pc = new RTCPeerConnection();
       peerRef.current = pc;
 
-      // 오디오 출력 (AI 응답용)
       const audio = new Audio();
       audio.autoplay = true;
       pc.ontrack = (event) => {
         audio.srcObject = event.streams[0];
       };
 
-      // 연결 상태 변화 감지 → 연결 성공 시 링음 정지
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === "connected") {
           ring.pause();
@@ -70,15 +70,12 @@ export function useRealtimeAI() {
         }
       };
 
-      // 마이크 스트림 추가
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
-      // 데이터 채널 생성
       const ch = pc.createDataChannel("response");
       channelRef.current = ch;
 
-      // 데이터 채널 열리면 세션 설정 전송
       ch.onopen = () => {
         ch.send(
           JSON.stringify({
@@ -90,11 +87,23 @@ export function useRealtimeAI() {
                 {
                   type: "function",
                   name: "navigateSection",
-                  description: "Scroll page to a specific section",
+                  description:
+                    "Scroll page smoothly to a section (info, announcements, gallery, food, location, program, goods)",
                   parameters: {
                     type: "object",
                     properties: {
-                      section: { type: "string" },
+                      section: {
+                        type: "string",
+                        enum: [
+                          "info",
+                          "announcements",
+                          "gallery",
+                          "food",
+                          "location",
+                          "program",
+                          "goods",
+                        ],
+                      },
                     },
                     required: ["section"],
                   },
@@ -105,9 +114,6 @@ export function useRealtimeAI() {
         );
       };
 
-      /**
-       * AI function call 수신 처리
-       */
       ch.onmessage = async (ev) => {
         try {
           const msg = JSON.parse(ev.data);
@@ -120,7 +126,6 @@ export function useRealtimeAI() {
             const args = JSON.parse(msg.arguments);
             const result = fn(args);
 
-            // 함수 실행 결과 전달
             ch.send(
               JSON.stringify({
                 type: "conversation.item.create",
@@ -132,7 +137,6 @@ export function useRealtimeAI() {
               })
             );
 
-            // 다음 응답 트리거
             ch.send(JSON.stringify({ type: "response.create" }));
           }
         } catch (error) {
@@ -140,9 +144,6 @@ export function useRealtimeAI() {
         }
       };
 
-      /**
-       * Offer 생성 → Answer 수신
-       */
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       await waitForIceGatheringComplete(pc);
@@ -173,9 +174,6 @@ export function useRealtimeAI() {
     }
   }
 
-  /**
-   * 통화 종료
-   */
   function endCall() {
     peerRef.current?.close();
     ringRef.current?.pause();
@@ -185,9 +183,6 @@ export function useRealtimeAI() {
   return { startCall, endCall, isConnecting, isConnected };
 }
 
-/**
- * ICE Gathering 완료 대기
- */
 function waitForIceGatheringComplete(pc: RTCPeerConnection): Promise<void> {
   if (pc.iceGatheringState === "complete") {
     return Promise.resolve();
