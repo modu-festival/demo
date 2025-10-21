@@ -9,38 +9,38 @@ interface FestivalInfoProps {
 
 export function FestivalInfo({ lang }: FestivalInfoProps) {
   return (
-    <div className="bg-white px-6 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center" data-testid="text-festival-name">
+    <div className="bg-white px-6 pt-8 pb-4">
+      <h1
+        className="text-title1_b_24 text-black mb-4 text-left"
+        data-testid="text-festival-name"
+      >
         {festivalInfo.name[lang]}
       </h1>
-      
-      <div className="space-y-4">
-        <div className="flex items-start gap-3" data-testid="info-dates">
-          <Calendar className="h-5 w-5 text-modu-red mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="text-sm text-gray-600 mb-1">{getTranslation(lang, "date")}</p>
-            <p className="text-base text-gray-900">{festivalInfo.dates[lang]}</p>
-          </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center gap-2" data-testid="info-dates">
+          <Calendar className="h-4 w-4 text-gray-600 flex-shrink-0" />
+          <p className="text-[13px] font-medium text-gray-700">
+            {festivalInfo.dates[lang]}
+          </p>
         </div>
-        
-        <div className="flex items-start gap-3" data-testid="info-location">
-          <MapPin className="h-5 w-5 text-modu-red mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="text-sm text-gray-600 mb-1">{getTranslation(lang, "locationLabel")}</p>
-            <p className="text-base text-gray-900">{festivalInfo.location[lang]}</p>
-          </div>
+
+        <div className="flex items-center gap-2" data-testid="info-location">
+          <MapPin className="h-4 w-4 text-gray-600 flex-shrink-0" />
+          <p className="text-[13px] font-medium text-gray-700">
+            {festivalInfo.location[lang]}
+          </p>
         </div>
-        
-        <div className="flex items-start gap-3" data-testid="info-price">
-          <Ticket className="h-5 w-5 text-modu-red mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="text-sm text-gray-600 mb-1">{getTranslation(lang, "price")}</p>
-            <p className="text-base font-semibold text-modu-red">{festivalInfo.price[lang]}</p>
-          </div>
+
+        <div className="flex items-center gap-2" data-testid="info-price">
+          <Ticket className="h-4 w-4 text-gray-600 flex-shrink-0" />
+          <p className="text-[13px] font-medium text-gray-700">
+            {festivalInfo.price[lang]}
+          </p>
         </div>
       </div>
-      
-      <div className="mt-8 border-t border-gray-300" />
+
+      <div className="mt-7 border-t border-gray-300" />
     </div>
   );
 }
