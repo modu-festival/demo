@@ -9,15 +9,13 @@ interface LocationSectionProps {
 
 export function LocationSection({ lang }: LocationSectionProps) {
   return (
-    <div className="bg-white px-6 py-8 border-t border-gray-200">
+    <div className="bg-white px-6 py-8">
       <h2 className="text-xl font-bold text-gray-900 mb-4">{getTranslation(lang, "location")}</h2>
       
-      <div className="space-y-6">
+      <div className="space-y-3">
         <div className="flex items-start gap-3">
-          <MapPin className="h-5 w-5 text-modu-red mt-0.5 flex-shrink-0" />
           <div>
-            <p className="text-sm text-gray-600 mb-1">{getTranslation(lang, "address")}</p>
-            <p className="text-base text-gray-900">{locationInfo.address[lang]}</p>
+            <p className="text-sm text-gray-900">{locationInfo.address[lang]}</p>
           </div>
         </div>
         
@@ -28,7 +26,7 @@ export function LocationSection({ lang }: LocationSectionProps) {
           </div>
         </div>
         
-        {locationInfo.parking && (
+        {/* {locationInfo.parking && (
           <div className="flex items-start gap-3">
             <Car className="h-5 w-5 text-modu-red mt-0.5 flex-shrink-0" />
             <div>
@@ -46,7 +44,7 @@ export function LocationSection({ lang }: LocationSectionProps) {
               <p className="text-base text-gray-900">{locationInfo.publicTransport[lang]}</p>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
