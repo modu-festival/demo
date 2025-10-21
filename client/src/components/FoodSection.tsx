@@ -8,7 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Utensils } from "lucide-react";
 
 interface FoodSectionProps {
   lang: Language;
@@ -17,9 +17,11 @@ interface FoodSectionProps {
 
 export function FoodSection({ lang, onDownloadPamphlet }: FoodSectionProps) {
   return (
-    <div className="bg-white px-6 py-8 border-t border-gray-200">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">{getTranslation(lang, "food")}</h2>
-      
+    <div className="bg-white px-6 py-8">
+      <h2 className="text-xl font-bold text-gray-900 mb-4">
+        {getTranslation(lang, "food")}
+      </h2>
+
       <Accordion type="single" collapsible className="space-y-3">
         {foodZones.map((zone) => (
           <AccordionItem
@@ -29,21 +31,33 @@ export function FoodSection({ lang, onDownloadPamphlet }: FoodSectionProps) {
             data-testid={`food-zone-${zone.id}`}
           >
             <AccordionTrigger className="text-base font-semibold text-gray-900 hover:no-underline">
-              {zone.name[lang]}
+              <div className="flex items-center gap-2">
+                <Utensils className="h-4 w-4 text-gray-900" />
+                {zone.name[lang]}
+              </div>
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-4 pt-2">
                 {zone.restaurants.map((restaurant) => (
-                  <div key={restaurant.id} className="bg-gray-50 rounded-md p-4">
-                    <h4 className="font-semibold text-gray-900 mb-3">{restaurant.name[lang]}</h4>
-                    <div className="space-y-2">
+                  <div
+                    key={restaurant.id}
+                    className="bg-gray-50 rounded-md p-4"
+                  >
+                    <h4 className="text-sm font-semibold text-gray-800 mb-3">
+                      {restaurant.name[lang]}
+                    </h4>
+                    <div className="space-y-1">
                       {restaurant.menu.map((item, idx) => (
                         <div
                           key={idx}
                           className="flex justify-between items-center text-sm"
                         >
-                          <span className="text-gray-700">{item.name[lang]}</span>
-                          <span className="font-medium text-gray-900">{item.price}</span>
+                          <span className="font-medium text-gray-800">
+                            {item.name[lang]}
+                          </span>
+                          <span className="font-medium text-gray-800">
+                            {item.price}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -54,15 +68,15 @@ export function FoodSection({ lang, onDownloadPamphlet }: FoodSectionProps) {
           </AccordionItem>
         ))}
       </Accordion>
-      
+
       <Button
         data-testid="button-download-food-pamphlet"
         onClick={onDownloadPamphlet}
         variant="outline"
-        className="w-full mt-6"
+        className="w-full mt-6 py-3"
       >
-        <Download className="mr-2 h-4 w-4" />
         {getTranslation(lang, "downloadFoodPamphlet")}
+        <Download className="mr-2 h-3 w-3" />
       </Button>
     </div>
   );
