@@ -58,21 +58,25 @@ export function StickyTabs({ lang, activeTab, onTabClick }: StickyTabsProps) {
       <div ref={sentinelRef} className="h-0" />
       <div
         ref={tabsRef}
-        className={`bg-white border-b border-gray-300 transition-all duration-200 ${
-          isSticky ? "sticky top-0 z-50 shadow-md" : ""
+        className={`bg-white transition-all duration-200 ${
+          isSticky ? "sticky top-0 z-50" : ""
         }`}
       >
         <div className="overflow-x-auto scrollbar-hide">
-          <div className="flex gap-2 px-4 py-3 min-w-max">
+          <div className="flex gap-2 px-4 py-3 ml-1.5 min-w-max">
             {tabs.map((tab) => (
               <Button
                 key={tab.id}
                 ref={activeTab === tab.id ? activeButtonRef : null}
                 data-testid={`tab-${tab.id}`}
-                variant={activeTab === tab.id ? "default" : "outline"}
+                variant="ghost"
                 size="sm"
                 onClick={() => onTabClick(tab.id)}
-                className="whitespace-nowrap flex-shrink-0"
+                className={`whitespace-nowrap flex-shrink-0 rounded-full px-4 py-1.5 transition-all duration-200 ${
+                  activeTab === tab.id
+                    ? "bg-gray-900 border-0 text-[14px] font-bold text-white"
+                    : "bg-gray-100 border border-gray-300 text-[14px] font-medium text-gray-600"
+                }`}
               >
                 {tab.label}
               </Button>
