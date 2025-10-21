@@ -6,12 +6,14 @@ export default {
   theme: {
     extend: {
       borderRadius: {
-        lg: ".5625rem", /* 9px */
-        md: ".375rem", /* 6px */
-        sm: ".1875rem", /* 3px */
+        lg: ".5625rem" /* 9px */,
+        md: ".375rem" /* 6px */,
+        sm: ".1875rem" /* 3px */,
       },
+
+      // 🎨 Custom Colors
       colors: {
-        // Custom festival colors from design system
+        black: "#121212",
         gray: {
           100: "#FAFAFA",
           200: "#F0F0F4",
@@ -26,7 +28,6 @@ export default {
         modu: {
           red: "#FE4A4E",
         },
-        // Flat / base colors (regular buttons)
         background: "hsl(var(--background) / <alpha-value>)",
         foreground: "hsl(var(--foreground) / <alpha-value>)",
         border: "hsl(var(--border) / <alpha-value>)",
@@ -88,7 +89,7 @@ export default {
         "sidebar-accent": {
           DEFAULT: "hsl(var(--sidebar-accent) / <alpha-value>)",
           foreground: "hsl(var(--sidebar-accent-foreground) / <alpha-value>)",
-          border: "var(--sidebar-accent-border)"
+          border: "var(--sidebar-accent-border)",
         },
         status: {
           online: "rgb(34 197 94)",
@@ -97,11 +98,49 @@ export default {
           offline: "rgb(156 163 175)",
         },
       },
+
+      fontSize: {
+        title1_b_24: [
+          "24px",
+          { lineHeight: "normal", fontWeight: "700", letterSpacing: "-0.02em" },
+        ],
+        title2_b_20: [
+          "20px",
+          { lineHeight: "120%", fontWeight: "700", letterSpacing: "-0.02em" },
+        ],
+        title3_b_18: ["18px", { lineHeight: "normal", fontWeight: "700" }],
+        title4_b_16: ["16px", { lineHeight: "normal", fontWeight: "700" }],
+        title5_b_15: ["15px", { lineHeight: "normal", fontWeight: "700" }],
+        subtitle1_m_18: ["18px", { lineHeight: "normal", fontWeight: "500" }],
+        subtitle2_sb_16: ["16px", { lineHeight: "normal", fontWeight: "600" }],
+        subtitle3_b_15: ["15px", { lineHeight: "normal", fontWeight: "700" }],
+        subtitle4_b_14: ["14px", { lineHeight: "140%", fontWeight: "700" }],
+        subtitle5_sb_12: ["12px", { lineHeight: "140%", fontWeight: "600" }],
+        body1_m_16: ["16px", { lineHeight: "140%", fontWeight: "500" }],
+        body1_r_16: ["16px", { lineHeight: "normal", fontWeight: "400" }],
+        body2_m_15: ["15px", { lineHeight: "normal", fontWeight: "500" }],
+        body2_r_15: ["15px", { lineHeight: "normal", fontWeight: "400" }],
+        body3_m_14: ["14px", { lineHeight: "normal", fontWeight: "500" }],
+        body3_r_14: ["14px", { lineHeight: "140%", fontWeight: "400" }],
+        body4_sb_13: ["13px", { lineHeight: "140%", fontWeight: "600" }],
+        body4_m_13: ["13px", { lineHeight: "100%", fontWeight: "500" }],
+        body4_m_13_2: ["13px", { lineHeight: "120%", fontWeight: "500" }],
+        body5_m_12: ["12px", { lineHeight: "normal", fontWeight: "500" }],
+        body5_r_12: ["12px", { lineHeight: "normal", fontWeight: "400" }],
+        body6_m_11: ["11px", { lineHeight: "140%", fontWeight: "500" }],
+        caption_m_11: ["11px", { lineHeight: "140%", fontWeight: "500" }],
+        caption_sb_11: ["11px", { lineHeight: "normal", fontWeight: "600" }],
+        caption_b_10: ["10px", { lineHeight: "normal", fontWeight: "700" }],
+        caption_r_10: ["10px", { lineHeight: "normal", fontWeight: "400" }],
+        name_b_18: ["18px", { lineHeight: "normal", fontWeight: "700" }],
+      },
+
       fontFamily: {
-        sans: ["var(--font-sans)"],
+        sans: ["Pretendard", "var(--font-sans)", "sans-serif"],
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
       },
+
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -111,10 +150,15 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        marquee: {
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(-100%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+         marquee: "marquee 20s linear infinite",
       },
     },
   },
