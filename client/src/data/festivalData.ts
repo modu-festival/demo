@@ -1,29 +1,37 @@
-import type { FestivalInfo, Announcement, GalleryItem, FoodZone, ProgramCategory, GoodsItem, LocationInfo } from "@shared/schema";
+import type {
+  FestivalInfo,
+  Announcement,
+  GalleryItem,
+  FoodZone,
+  ProgramCategory,
+  GoodsItem,
+  LocationInfo,
+} from "@shared/schema";
 
 export const festivalInfo: FestivalInfo = {
   name: {
     ko: "20주년 시흥 갯골축제",
-    en: "Siheung Gaetgol Festival",
-    zh: "大家的节日",
-    ja: "みんなの祭り",
+    en: "20th Anniversary Siheung Gaetgol Festival",
+    zh: "20周年 始兴 갯골节",
+    ja: "20周年 シフン ゲットゴル祭り",
   },
   dates: {
-    ko: "2025년 5월 26일 (금) - 5월 28일 (일)",
-    en: "May 26 (Fri) - May 28 (Sun), 2025",
-    zh: "2025年5月26日（周五）- 5月28日（周日）",
-    ja: "2025年5月26日（金）- 5月28日（日）",
+    ko: "2025년 9월 26일 (금) - 9월 28일 (일)",
+    en: "September 26 (Fri) – September 28 (Sun), 2025",
+    zh: "2025年9月26日（ 金 ）- 9月28日（日）",
+    ja: "2025年9月26日（金）- 9月28日（日）",
   },
   location: {
-    ko: "서울 한강공원 여의도 지구",
-    en: "Yeouido Hangang Park, Seoul",
-    zh: "首尔汉江公园汝矣岛地区",
-    ja: "ソウル漢江公園汝矣島地区",
+    ko: "경기도 시흥시 동서로 287 (장곡동)",
+    en: "287 Dongseo-ro, Siheung-si, Gyeonggi-do",
+    zh: "京畿道 始兴市 东西路 287（长谷洞）",
+    ja: "京畿道 始興市 東西路287（長谷洞）",
   },
   price: {
-    ko: "무료 (일부체험프로그램 유료)",
-    en: "Free Admission (some experience programs paid)",
-    zh: "免费入场",
-    ja: "無料入場",
+    ko: "무료 (일부 체험 프로그램 유료)",
+    en: "Free (Some experience programs require fee)",
+    zh: "免费入场（部分体验项目收费）",
+    ja: "無料入場（体験プログラム一部有料）",
   },
 };
 
@@ -32,40 +40,25 @@ export const announcements: Announcement[] = [
     id: "1",
     title: {
       ko: "우천 취소 안내",
-      en: "Festival Opening Notice",
-      zh: "节日开幕通知",
-      ja: "フェスティバル開催のお知らせ",
+      en: "Notice: Weather-related Cancellations",
+      zh: "雨天取消通知",
+      ja: "雨天中止のお知らせ",
     },
     content: {
-      ko: "햔재 비로 인해 열기구 / 소금에 빠지새우 / 갯골버스킹 오전 진행이 불가하며 갯골요가 / 염부체험 우천 취소입니다.",
-      en: "The festival will be held for 3 days from May 26 to 28, 2025. We look forward to your interest and participation.",
-      zh: "节日将于2025年5月26日至28日举行，为期3天。期待您的关注和参与。",
-      ja: "2025年5月26日から28日までの3日間開催されます。皆様のご関心とご参加をお待ちしております。",
+      ko: "현재 비로 인해 열기구/소금에 빠지새우/갯골버스킹 오전 진행이 불가하며 갯골요가/염부체험 우천 취소입니다.",
+      en: "Due to rain, the morning sessions of balloon rides / salt-immersed shrimp / Gaetgol busking are cancelled, and Gaetgol yoga / salt-worker experience are cancelled for the rain.",
+      zh: "因雨天，热气球／盐中沉虾／盖特谷街头演出上午场无法进行，盖特谷瑜伽／盐工体验也因雨取消。",
+      ja: "雨天のため、熱気球／塩に浸かるエビ／ゲットゴルバスキングの午前回は実施できず、ゲットゴルヨガ／塩工体験も雨天中止となります。",
     },
-    date: "2025-05-01",
+    date: "2025-09-28",
   },
-  // {
-  //   id: "2",
-  //   title: {
-  //     ko: "주차 및 교통 안내",
-  //     en: "Parking and Transportation Guide",
-  //     zh: "停车和交通指南",
-  //     ja: "駐車と交通案内",
-  //   },
-  //   content: {
-  //     ko: "축제 기간 중 주차장이 혼잡할 수 있으니 대중교통 이용을 권장합니다.",
-  //     en: "Parking lots may be crowded during the festival. We recommend using public transportation.",
-  //     zh: "节日期间停车场可能会很拥挤。建议使用公共交通。",
-  //     ja: "フェスティバル期間中は駐車場が混雑する可能性があります。公共交通機関のご利用をお勧めします。",
-  //   },
-  //   date: "2025-05-10",
-  // },
 ];
 
 export const galleryItems: GalleryItem[] = [
   {
     id: "1",
-    imageUrl: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&h=600&fit=crop",
+    imageUrl:
+      "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&h=600&fit=crop",
     caption: {
       ko: "2024 축제 현장",
       en: "2024 Festival Scene",
@@ -75,7 +68,8 @@ export const galleryItems: GalleryItem[] = [
   },
   {
     id: "2",
-    imageUrl: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&h=600&fit=crop",
+    imageUrl:
+      "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&h=600&fit=crop",
     caption: {
       ko: "공연 무대",
       en: "Performance Stage",
@@ -85,7 +79,8 @@ export const galleryItems: GalleryItem[] = [
   },
   {
     id: "3",
-    imageUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&h=600&fit=crop",
+    imageUrl:
+      "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&h=600&fit=crop",
     caption: {
       ko: "음악 공연",
       en: "Music Performance",
@@ -95,7 +90,8 @@ export const galleryItems: GalleryItem[] = [
   },
   {
     id: "4",
-    imageUrl: "https://images.unsplash.com/photo-1506157786151-b8491531f063?w=800&h=600&fit=crop",
+    imageUrl:
+      "https://images.unsplash.com/photo-1506157786151-b8491531f063?w=800&h=600&fit=crop",
     caption: {
       ko: "먹거리 존",
       en: "Food Zone",
@@ -118,29 +114,115 @@ export const foodZones: FoodZone[] = [
       {
         id: "a1",
         name: {
-          ko: "한식당",
-          en: "Korean Restaurant",
-          zh: "韩国餐厅",
-          ja: "韓国料理店",
+          ko: "거창왕족발",
+          en: "Geochang Wang Jokbal",
+          zh: "居昌王猪脚",
+          ja: "コチャン王チョッパル",
         },
         menu: [
-          { name: { ko: "비빔밥", en: "Bibimbap", zh: "拌饭", ja: "ビビンバ" }, price: "12,000원" },
-          { name: { ko: "김치찌개", en: "Kimchi Stew", zh: "泡菜汤", ja: "キムチチゲ" }, price: "10,000원" },
-          { name: { ko: "불고기", en: "Bulgogi", zh: "烤肉", ja: "プルコギ" }, price: "15,000원" },
+          {
+            name: {
+              ko: "족발(소)",
+              en: "Pork Hock (Small)",
+              zh: "猪脚（小）",
+              ja: "豚足（小）",
+            },
+            price: "25,000원",
+          },
+          {
+            name: {
+              ko: "족발(중)",
+              en: "Pork Hock (Medium)",
+              zh: "猪脚（中）",
+              ja: "豚足（中）",
+            },
+            price: "35,000원",
+          },
+          {
+            name: {
+              ko: "족발(대)",
+              en: "Pork Hock (Large)",
+              zh: "猪脚（大）",
+              ja: "豚足（大）",
+            },
+            price: "45,000원",
+          },
         ],
       },
       {
         id: "a2",
         name: {
-          ko: "분식집",
-          en: "Snack Bar",
-          zh: "小吃店",
-          ja: "軽食店",
+          ko: "경기식품",
+          en: "Gyeonggi Foods",
+          zh: "京畿食品",
+          ja: "キョンギ食品",
         },
         menu: [
-          { name: { ko: "떡볶이", en: "Tteokbokki", zh: "炒年糕", ja: "トッポッキ" }, price: "5,000원" },
-          { name: { ko: "순대", en: "Sundae", zh: "血肠", ja: "スンデ" }, price: "6,000원" },
-          { name: { ko: "튀김", en: "Fried Food", zh: "油炸食品", ja: "揚げ物" }, price: "4,000원" },
+          {
+            name: {
+              ko: "30cm 왕핫도그",
+              en: "30 cm King Hotdog",
+              zh: "30 厘米王热狗",
+              ja: "30cm 王ホットドッグ",
+            },
+            price: "6,000원",
+          },
+          {
+            name: {
+              ko: "순대",
+              en: "Sundae (Korean blood sausage)",
+              zh: "血肠",
+              ja: "スンデ",
+            },
+            price: "6,000원",
+          },
+          {
+            name: {
+              ko: "소떡소떡",
+              en: "So-Tteok So-Tteok",
+              zh: "年糕香肠串",
+              ja: "ソトッソトッ（串）",
+            },
+            price: "4,500원",
+          },
+        ],
+      },
+      {
+        id: "a3",
+        name: {
+          ko: "토키타코",
+          en: "Toki Taco",
+          zh: "托基塔可",
+          ja: "トキタコ",
+        },
+        menu: [
+          {
+            name: {
+              ko: "까르니따스타코 2p",
+              en: "Carnitas Taco 2p",
+              zh: "墨西哥炖猪肉塔可2个",
+              ja: "カルニタスタコ2個",
+            },
+            price: "11,000원",
+          },
+          {
+            name: {
+              ko: "부리또보울(치킨)",
+              en: "Burrito Bowl (Chicken)",
+              zh: "鸡肉卷碗",
+              ja: "ブリトーボウル（チキン）",
+            },
+            price: "14,000원",
+          },
+          {
+            name: {
+              ko: "칠리콘치즈나쵸",
+              en: "Chili con Cheese Nachos",
+              zh: "辣椒芝士玉米片",
+              ja: "チリコンチーズナチョス",
+            },
+            price: "13,500원",
+          },
         ],
       },
     ],
@@ -157,27 +239,59 @@ export const foodZones: FoodZone[] = [
       {
         id: "b1",
         name: {
-          ko: "치킨 전문점",
-          en: "Chicken House",
-          zh: "炸鸡店",
-          ja: "チキン専門店",
+          ko: "배곧마루카페",
+          en: "Baegot Maru Cafe",
+          zh: "培葛马루咖啡馆",
+          ja: "ベゴッマルカフェ",
         },
         menu: [
-          { name: { ko: "후라이드 치킨", en: "Fried Chicken", zh: "炸鸡", ja: "フライドチキン" }, price: "18,000원" },
-          { name: { ko: "양념 치킨", en: "Spicy Chicken", zh: "调味鸡", ja: "ヤンニョムチキン" }, price: "19,000원" },
+          {
+            name: {
+              ko: "지팡이 소금 아이스크림",
+              en: "Salt Stick Ice Cream",
+              zh: "拐杖盐冰淇淋",
+              ja: "杖ソルトアイスクリーム",
+            },
+            price: "5,000원",
+          },
+          {
+            name: {
+              ko: "복숭아 소금에이드",
+              en: "Peach Salt Ade",
+              zh: "桃盐汽水",
+              ja: "ピーチソルトエード",
+            },
+            price: "4,500원",
+          },
         ],
       },
       {
         id: "b2",
         name: {
-          ko: "피자 가게",
-          en: "Pizza Shop",
-          zh: "披萨店",
-          ja: "ピザショップ",
+          ko: "해질녘카페",
+          en: "Sunset Cafe",
+          zh: "日落咖啡馆",
+          ja: "夕暮れカフェ",
         },
         menu: [
-          { name: { ko: "페퍼로니 피자", en: "Pepperoni Pizza", zh: "意大利辣香肠披萨", ja: "ペパロニピザ" }, price: "22,000원" },
-          { name: { ko: "콤비네이션 피자", en: "Combination Pizza", zh: "综合披萨", ja: "コンビネーションピザ" }, price: "25,000원" },
+          {
+            name: {
+              ko: "소금수제레몬에이드",
+              en: "Hand-made Lemon Salt Ade",
+              zh: "手作盐柠檬汽水",
+              ja: "手作り塩レモンエード",
+            },
+            price: "22,000원",
+          },
+          {
+            name: {
+              ko: "소금컵빙수",
+              en: "Salt Cup Bingsu",
+              zh: "盐杯刨冰",
+              ja: "塩カップかき氷",
+            },
+            price: "25,000원",
+          },
         ],
       },
     ],
@@ -194,28 +308,68 @@ export const foodZones: FoodZone[] = [
       {
         id: "c1",
         name: {
-          ko: "카페",
-          en: "Cafe",
-          zh: "咖啡厅",
-          ja: "カフェ",
+          ko: "비건프렌즈",
+          en: "Vegan Friends",
+          zh: "纯素朋友",
+          ja: "ヴィーガンフレンズ",
         },
         menu: [
-          { name: { ko: "아메리카노", en: "Americano", zh: "美式咖啡", ja: "アメリカーノ" }, price: "4,500원" },
-          { name: { ko: "카페 라떼", en: "Cafe Latte", zh: "拿铁咖啡", ja: "カフェラテ" }, price: "5,000원" },
-          { name: { ko: "에이드", en: "Ade", zh: "果汁饮料", ja: "エード" }, price: "6,000원" },
+          {
+            name: {
+              ko: "비건 떡볶이",
+              en: "Vegan Tteokbokki",
+              zh: "纯素炒年糕",
+              ja: "ヴィーガントッポッキ",
+            },
+            price: "5,000원",
+          },
+          {
+            name: {
+              ko: "비건 감자 핫도그",
+              en: "Vegan Potato Hotdog",
+              zh: "纯素土豆热狗",
+              ja: "ヴィーガンポテトホットドッグ",
+            },
+            price: "4,000원",
+          },
+          {
+            name: {
+              ko: "비건 핫도그 스키니",
+              en: "Vegan Hotdog Skinny",
+              zh: "纯素热狗斯基尼",
+              ja: "ヴィーガンホットドッグスキニー",
+            },
+            price: "3,000원",
+          },
         ],
       },
       {
         id: "c2",
         name: {
-          ko: "디저트 가게",
-          en: "Dessert Shop",
-          zh: "甜品店",
-          ja: "デザートショップ",
+          ko: "넘버원푸드",
+          en: "Number One Food",
+          zh: "第一号食品",
+          ja: "ナンバーワンフード",
         },
         menu: [
-          { name: { ko: "와플", en: "Waffle", zh: "华夫饼", ja: "ワッフル" }, price: "7,000원" },
-          { name: { ko: "아이스크림", en: "Ice Cream", zh: "冰淇淋", ja: "アイスクリーム" }, price: "5,000원" },
+          {
+            name: {
+              ko: "왕닭꼬치",
+              en: "King Chicken Skewer",
+              zh: "王鸡肉串",
+              ja: "キングチキン串",
+            },
+            price: "5,000원",
+          },
+          {
+            name: {
+              ko: "빙수(팥, 망고)",
+              en: "Bingsu (Red Bean, Mango)",
+              zh: "刨冰（红豆、芒果）",
+              ja: "かき氷（小豆、マンゴー）",
+            },
+            price: "6,000원",
+          },
         ],
       },
     ],
@@ -253,7 +407,7 @@ export const programCategories: ProgramCategory[] = [
           ja: "無料",
         },
         description: {
-          ko: "자유로운 분위기의 거리 공연",
+          ko: "자연과 어우러져 즐기는 버스킹 공연",
           en: "Free-spirited street performances",
           zh: "自由氛围的街头表演",
           ja: "自由な雰囲気のストリートパフォーマンス",
@@ -622,7 +776,8 @@ export const goodsItems: GoodsItem[] = [
       ja: "フェスティバルTシャツ",
     },
     price: "25,000원",
-    imageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop",
+    imageUrl:
+      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop",
   },
   {
     id: "g2",
@@ -633,7 +788,8 @@ export const goodsItems: GoodsItem[] = [
       ja: "エコバッグ",
     },
     price: "15,000원",
-    imageUrl: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=400&h=400&fit=crop",
+    imageUrl:
+      "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=400&h=400&fit=crop",
   },
   {
     id: "g3",
@@ -644,7 +800,8 @@ export const goodsItems: GoodsItem[] = [
       ja: "マグカップ",
     },
     price: "12,000원",
-    imageUrl: "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=400&h=400&fit=crop",
+    imageUrl:
+      "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=400&h=400&fit=crop",
   },
   {
     id: "g4",
@@ -655,18 +812,20 @@ export const goodsItems: GoodsItem[] = [
       ja: "ステッカーセット",
     },
     price: "8,000원",
-    imageUrl: "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&h=400&fit=crop",
+    imageUrl:
+      "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&h=400&fit=crop",
   },
 ];
 
 export const locationInfo: LocationInfo = {
   address: {
-    ko: "서울특별시 영등포구 여의동로 330 한강공원 여의도지구",
+    ko: "경기도 시흥시 동서로 287 (장곡동)",
     en: "330 Yeouidong-ro, Yeongdeungpo-gu, Seoul, Yeouido Hangang Park",
     zh: "首尔特别市永登浦区汝矣岛路330号汉江公园汝矣岛地区",
     ja: "ソウル特別市永登浦区汝矣島路330 漢江公園汝矣島地区",
   },
-  mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3164.289!2d126.932!3d37.529!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzfCsDMxJzQ0LjQiTiAxMjbCsDU1JzU1LjIiRQ!5e0!3m2!1sen!2skr!4v1234567890",
+  mapUrl:
+    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3164.289!2d126.932!3d37.529!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzfCsDMxJzQ0LjQiTiAxMjbCsDU1JzU1LjIiRQ!5e0!3m2!1sen!2skr!4v1234567890",
   parking: {
     ko: "한강공원 주차장 이용 가능 (유료)",
     en: "Hangang Park parking available (paid)",
