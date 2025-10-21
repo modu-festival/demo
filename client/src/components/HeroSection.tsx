@@ -27,9 +27,26 @@ export function HeroSection({
     onAICall();
 
     try {
-      // ✅ 클릭 시 즉시 재생 (Autoplay 방지 회피)
-      console.log("Attempting to play ring audio...");
+      // requestIdleCallback으로 오디오 처리를 비동기로 이동
+      if ("requestIdleCallback" in window) {
+        (window as any).requestIdleCallback(() => {
+          playRingToneAsync();
+        });
+      } else {
+        // 폴백: setTimeout으로 다른 작업 우선처리
+        setTimeout(() => {
+          playRingToneAsync();
+        }, 0);
+      }
+    } catch (error) {
+      console.warn("Failed to create ring audio:", error);
+    }
 
+    await startCall();
+  };
+
+  const playRingToneAsync = () => {
+    try {
       // Web Audio API를 사용한 벨 소리 생성
       const audioContext = new (window.AudioContext ||
         (window as any).webkitAudioContext)();
@@ -75,8 +92,6 @@ export function HeroSection({
     } catch (error) {
       console.warn("Failed to create ring audio:", error);
     }
-
-    await startCall();
   };
 
   return (

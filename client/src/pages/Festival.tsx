@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import type { Language } from "@shared/schema";
 import { HeroSection } from "@/components/HeroSection";
 import { FestivalInfo } from "@/components/FestivalInfo";
@@ -12,11 +12,22 @@ import { GoodsSection } from "@/components/GoodsSection";
 import { useToast } from "@/hooks/use-toast";
 import Footer from "@/components/Footer";
 
+// IntersectionObserver 설정 - 정확한 섹션 감지
+// rootMargin: 화면 상단 80px 아래 지점을 기준으로 감지 (sticky tab 높이 고려)
+const OBSERVER_OPTIONS = {
+  root: null,
+  rootMargin: "-80px 0px -50% 0px",
+  threshold: 0, // 단일 threshold로 깜빡임 방지
+};
+
+const SCROLL_OFFSET = -80;
+const SCROLL_TIMEOUT = 600; // 1000ms -> 600ms로 단축
+
 export default function Festival() {
   const [language, setLanguage] = useState<Language>("ko");
   const [activeTab, setActiveTab] = useState<string>("gallery");
   const [isUserInteraction, setIsUserInteraction] = useState<boolean>(false);
-  const [isScrolling, setIsScrolling] = useState<boolean>(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   const sectionRefs = {
@@ -27,27 +38,27 @@ export default function Festival() {
     goods: useRef<HTMLDivElement>(null),
   };
 
+  // IntersectionObserver 초기화 - 정확한 섹션 감지
   useEffect(() => {
-    const observerOptions = {
-      root: null,
-      rootMargin: "-120px 0px -40% 0px",
-      threshold: [0, 0.25, 0.5, 0.75, 1],
-    };
-
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      // 스크롤 중일 때는 observer 비활성화
-      if (isScrolling) return;
+      // 사용자가 탭을 클릭 중인 경우 자동 업데이트 방지
+      if (isUserInteraction) {
+        return;
+      }
 
-      const visibleEntries = entries.filter((entry) => entry.isIntersecting);
-
-      if (visibleEntries.length > 0) {
-        const mostVisible = visibleEntries.reduce((prev, current) => {
-          return current.intersectionRatio > prev.intersectionRatio
-            ? current
-            : prev;
+      // 가장 위에 있는 intersecting 섹션만 선택
+      const enteringEntries = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => {
+          // y좌표 기준으로 정렬 (위에서부터 가장 먼저 만나는 섹션)
+          return a.boundingClientRect.top - b.boundingClientRect.top;
         });
 
-        const sectionId = mostVisible.target.id as string;
+      if (enteringEntries.length > 0) {
+        // 가장 위에 있는 섹션을 활성화
+        const topSection = enteringEntries[0];
+        const sectionId = topSection.target.id as string;
+
         if (sectionId) {
           setActiveTab(sectionId);
         }
@@ -56,7 +67,7 @@ export default function Festival() {
 
     const observer = new IntersectionObserver(
       observerCallback,
-      observerOptions
+      OBSERVER_OPTIONS
     );
 
     Object.values(sectionRefs).forEach((ref) => {
@@ -66,29 +77,41 @@ export default function Festival() {
     });
 
     return () => observer.disconnect();
-  }, [isScrolling]);
+  }, [isUserInteraction]);
 
-  const handleTabClick = (tabId: string) => {
+  const handleTabClick = useCallback((tabId: string) => {
     setIsUserInteraction(true);
-    setIsScrolling(true);
-    setActiveTab(tabId); // 즉시 탭 상태 업데이트
+    setActiveTab(tabId);
 
     const targetRef = sectionRefs[tabId as keyof typeof sectionRefs];
     if (targetRef.current) {
-      const yOffset = -80;
       const y =
         targetRef.current.getBoundingClientRect().top +
         window.scrollY +
-        yOffset;
+        SCROLL_OFFSET;
 
       window.scrollTo({ top: y, behavior: "smooth" });
 
-      // 스크롤 완료 후 observer 다시 활성화
-      setTimeout(() => {
-        setIsScrolling(false);
-      }, 1000); // 스크롤 애니메이션 시간 고려
+      // 기존 타이머 제거
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+
+      // 스크롤 완료 후 상태 초기화 (더 짧은 시간)
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsUserInteraction(false);
+      }, SCROLL_TIMEOUT);
     }
-  };
+  }, []);
+
+  // Cleanup: 언마운트 시 타이머 제거
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleAICall = () => {
     toast({

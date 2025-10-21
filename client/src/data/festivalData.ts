@@ -7,6 +7,14 @@ import type {
   GoodsItem,
   LocationInfo,
 } from "@shared/schema";
+import gallery1Image from "@assets/gallery1.png";
+import gallery2Image from "@assets/gallery2.png";
+import gallery3Image from "@assets/gallery3.png";
+import gallery4Image from "@assets/gallery4.jpg.jpg";
+import goods1Image from "@assets/goods1.jpg";
+import goods2Image from "@assets/goods2.jpg";
+import goods3Image from "@assets/goods3.jpg";
+import goods4Image from "@assets/goods4.jpg";
 
 export const festivalInfo: FestivalInfo = {
   name: {
@@ -57,46 +65,42 @@ export const announcements: Announcement[] = [
 export const galleryItems: GalleryItem[] = [
   {
     id: "1",
-    imageUrl:
-      "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&h=600&fit=crop",
+    imageUrl: gallery1Image,
     caption: {
       ko: "2024 축제 현장",
       en: "2024 Festival Scene",
-      zh: "2024节日现场",
-      ja: "2024フェスティバル会場",
+      zh: "2024年庆典现场",
+      ja: "2024年フェスティバルの様子",
     },
   },
   {
     id: "2",
-    imageUrl:
-      "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&h=600&fit=crop",
+    imageUrl: gallery2Image,
     caption: {
-      ko: "공연 무대",
-      en: "Performance Stage",
-      zh: "演出舞台",
-      ja: "パフォーマンスステージ",
+      ko: "비건가든 & 소금카페",
+      en: "Vegan Garden & Salt Cafe",
+      zh: "素食花园与盐咖啡馆",
+      ja: "ヴィーガンガーデン＆ソルトカフェ",
     },
   },
   {
     id: "3",
-    imageUrl:
-      "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&h=600&fit=crop",
+    imageUrl: gallery3Image,
     caption: {
-      ko: "음악 공연",
-      en: "Music Performance",
-      zh: "音乐表演",
-      ja: "音楽パフォーマンス",
+      ko: "갯골축제의 풍경",
+      en: "Scenery of Festival",
+      zh: "溪谷节的风景",
+      ja: "ケッコルフェスティバルの風景",
     },
   },
   {
     id: "4",
-    imageUrl:
-      "https://images.unsplash.com/photo-1506157786151-b8491531f063?w=800&h=600&fit=crop",
+    imageUrl: gallery4Image,
     caption: {
-      ko: "먹거리 존",
-      en: "Food Zone",
-      zh: "美食区",
-      ja: "フードゾーン",
+      ko: "체험존",
+      en: "Experience Zone",
+      zh: "体验区",
+      ja: "体験ゾーン",
     },
   },
 ];
@@ -771,49 +775,45 @@ export const goodsItems: GoodsItem[] = [
     id: "g1",
     name: {
       ko: "해로토로 키링 인형",
-      en: "Festival T-Shirt",
-      zh: "节日T恤",
-      ja: "フェスティバルTシャツ",
+      en: "Haerotoro Keyring Doll",
+      zh: "海露托罗钥匙扣玩偶",
+      ja: "ヘロトロキーリング人形",
     },
     price: "25,000원",
-    imageUrl:
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop",
+    imageUrl: goods1Image,
   },
   {
     id: "g2",
     name: {
       ko: "해로토로 크로스백 파우치",
-      en: "Eco Bag",
-      zh: "环保袋",
-      ja: "エコバッグ",
+      en: "Haerotoro Crossbody Pouch",
+      zh: "海露托罗斜挎小包",
+      ja: "ヘロトロクロスバッグポーチ",
     },
     price: "15,000원",
-    imageUrl:
-      "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=400&h=400&fit=crop",
+    imageUrl: goods2Image,
   },
   {
     id: "g3",
     name: {
-      ko: "머그컵",
-      en: "Mug Cup",
-      zh: "马克杯",
-      ja: "マグカップ",
+      ko: "갯골이와 친구들 키링",
+      en: "Gaetgoli & Friends Keyring",
+      zh: "溪谷伊与朋友钥匙扣",
+      ja: "ケッコリと仲間たちキーリング",
     },
     price: "12,000원",
-    imageUrl:
-      "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=400&h=400&fit=crop",
+    imageUrl: goods3Image,
   },
   {
     id: "g4",
     name: {
-      ko: "스티커 세트",
-      en: "Sticker Set",
-      zh: "贴纸套装",
-      ja: "ステッカーセット",
+      ko: "텀블러",
+      en: "Tumbler",
+      zh: "随行杯",
+      ja: "タンブラー",
     },
-    price: "8,000원",
-    imageUrl:
-      "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=400&h=400&fit=crop",
+    price: "14,000원",
+    imageUrl: goods4Image,
   },
 ];
 

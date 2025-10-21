@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { Language } from "@shared/schema";
 import { programCategories } from "@/data/festivalData";
 import { getTranslation } from "@/lib/translations";
@@ -24,23 +24,29 @@ export function ProgramSection({
   const [selectedDate, setSelectedDate] = useState<string>("all");
 
   const dates = ["all", "2025-05-26", "2025-05-27", "2025-05-28"];
-  const dateLabels: Record<string, string> = {
-    all: getTranslation(lang, "all"),
-    "2025-05-26": `26${getTranslation(lang, "day")} (${getTranslation(
-      lang,
-      "friday"
-    )})`,
-    "2025-05-27": `27${getTranslation(lang, "day")} (${getTranslation(
-      lang,
-      "saturday"
-    )})`,
-    "2025-05-28": `28${getTranslation(lang, "day")} (${getTranslation(
-      lang,
-      "sunday"
-    )})`,
-  };
 
-  const getFilteredCategories = () => {
+  // dateLabels를 useMemo로 메모이제이션 - lang 변경 시만 재생성
+  const dateLabels = useMemo<Record<string, string>>(
+    () => ({
+      all: getTranslation(lang, "all"),
+      "2025-05-26": `26${getTranslation(lang, "day")} (${getTranslation(
+        lang,
+        "friday"
+      )})`,
+      "2025-05-27": `27${getTranslation(lang, "day")} (${getTranslation(
+        lang,
+        "saturday"
+      )})`,
+      "2025-05-28": `28${getTranslation(lang, "day")} (${getTranslation(
+        lang,
+        "sunday"
+      )})`,
+    }),
+    [lang]
+  );
+
+  // 필터링된 카테고리를 useMemo로 메모이제이션
+  const filteredCategories = useMemo(() => {
     if (selectedDate === "all") return programCategories;
 
     return programCategories
@@ -58,9 +64,7 @@ export function ProgramSection({
           })),
       }))
       .filter((category) => category.performances.length > 0);
-  };
-
-  const filteredCategories = getFilteredCategories();
+  }, [selectedDate]);
 
   return (
     <div className="bg-white px-6 py-8">
@@ -78,7 +82,7 @@ export function ProgramSection({
               variant="ghost"
               size="sm"
               onClick={() => setSelectedDate(date)}
-              className={`whitespace-nowrap flex-shrink-0 rounded-md px-2 py-1 transition-all duration-200 ${
+              className={`whitespace-nowrap flex-shrink-0 rounded-md px-2 py-1 ${
                 selectedDate === date
                   ? "bg-gray-800 text-white"
                   : "bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200"

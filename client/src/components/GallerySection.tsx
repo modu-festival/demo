@@ -9,8 +9,10 @@ interface GallerySectionProps {
 export function GallerySection({ lang }: GallerySectionProps) {
   return (
     <div className="bg-white px-6 py-4">
-      <h2 className="text-xl font-bold text-gray-900 mb-4">{getTranslation(lang, "gallery")}</h2>
-      
+      <h2 className="text-xl font-bold text-gray-900 mb-4">
+        {getTranslation(lang, "gallery")}
+      </h2>
+
       <div className="overflow-x-auto scrollbar-hide -mx-6 px-6">
         <div className="flex gap-4 pb-2">
           {galleryItems.map((item) => (
@@ -28,7 +30,9 @@ export function GallerySection({ lang }: GallerySectionProps) {
                 />
               </div>
               {item.caption && (
-                <p className="text-[13px] font-medium text-gray-700 mt-2">{item.caption[lang]}</p>
+                <p className="text-[13px] font-medium text-gray-700 mt-2">
+                  {item.caption[lang]}
+                </p>
               )}
             </div>
           ))}
