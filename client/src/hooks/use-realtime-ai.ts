@@ -235,16 +235,7 @@ export function useRealtimeAI() {
   }
 
   function endCall() {
-    // 오디오 스트림 정리
-    if (peerRef.current) {
-      peerRef.current.getSenders().forEach((sender) => {
-        if (sender.track) {
-          sender.track.stop();
-        }
-      });
-      peerRef.current.close();
-    }
-
+    peerRef.current?.close();
     channelRef.current = null;
     setIsConnected(false);
   }
