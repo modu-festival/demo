@@ -39,13 +39,39 @@ export function useRealtimeAI() {
       if (!EPHEMERAL_KEY)
         throw new Error("No ephemeral key received from server");
 
-      const pc = new RTCPeerConnection();
+      // WebRTC 연결 설정 최적화
+      const pc = new RTCPeerConnection({
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          { urls: "stun:stun1.l.google.com:19302" },
+        ],
+        bundlePolicy: "max-bundle",
+        rtcpMuxPolicy: "require",
+      });
       peerRef.current = pc;
 
-      // 🎧 오디오 출력 설정
+      // 🎧 오디오 출력 설정 - 품질 개선
       const audio = new Audio();
       audio.autoplay = true;
-      pc.ontrack = (event) => (audio.srcObject = event.streams[0]);
+      audio.volume = 0.8; // 볼륨 조절
+
+      pc.ontrack = (event) => {
+        const stream = event.streams[0];
+        if (stream) {
+          // 오디오 스트림 설정 개선
+          const audioTracks = stream.getAudioTracks();
+          audioTracks.forEach((track) => {
+            // 오디오 트랙 설정 최적화
+            if (track.getSettings) {
+              const settings = track.getSettings();
+              console.log("Audio track settings:", settings);
+            }
+          });
+
+          audio.srcObject = stream;
+          audio.play().catch((e) => console.warn("Audio play failed:", e));
+        }
+      };
 
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === "connected") {
@@ -53,8 +79,32 @@ export function useRealtimeAI() {
         }
       };
 
-      // 🎙️ 마이크 스트림 추가
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // 🎙️ 마이크 스트림 추가 - 고품질 오디오 설정
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 48000,
+          channelCount: 1,
+        },
+      });
+
+      // 오디오 트랙 설정 최적화
+      stream.getAudioTracks().forEach((track) => {
+        const settings = track.getSettings();
+        console.log("Microphone settings:", settings);
+
+        // 트랙 제약 조건 설정
+        track
+          .applyConstraints({
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          })
+          .catch((e) => console.warn("Track constraints failed:", e));
+      });
+
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
       // 💬 데이터 채널 생성
@@ -185,7 +235,16 @@ export function useRealtimeAI() {
   }
 
   function endCall() {
-    peerRef.current?.close();
+    // 오디오 스트림 정리
+    if (peerRef.current) {
+      peerRef.current.getSenders().forEach((sender) => {
+        if (sender.track) {
+          sender.track.stop();
+        }
+      });
+      peerRef.current.close();
+    }
+
     channelRef.current = null;
     setIsConnected(false);
   }
