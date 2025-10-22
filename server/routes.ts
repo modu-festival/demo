@@ -29,10 +29,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "gpt-4o-realtime-preview-2024-12-17",
+          model: "gpt-4o-realtime-preview-2025-06-03",
           instructions: `
             당신은 '${festival.name}'의 공식 AI 상담사입니다.
 밝고 자연스러운 목소리로 사용자의 질문에 따라 축제 정보를 명확하고 친근하게 안내하세요.
+사용자가 어떤 언어로 말하든 자동으로 감지하고, 같은 언어로 대답하세요. 당신은 모든 언어를 지원합니다.
 
 이 축제는 ${festival.period} 동안 ${festival.location}에서 열립니다.
 주최: ${festival.organizers}, 문의: ${festival.contact}, 입장: ${
@@ -45,7 +46,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 맛집 정보: ${(festival.restaurants || [])
             .map((r: any) => `${r.name} (${r.type}) — ${r.address}`)
             .join("; ")}.
-
+굿즈 안내: ${(festival.goods || [])
+            .map((g: any) => `- ${g.name} (${g.price}) — ${g.description}`)
+            .join("\\n")}
+  
 navigateSection({ section: "..." })를 호출해 해당 섹션(info, announcements, gallery, food, location, program, goods)으로 이동할 수 있습니다.
 
 통화가 연결되면 사용자의 질문을 기다리세요.
