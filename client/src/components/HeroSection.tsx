@@ -100,7 +100,7 @@ export function HeroSection({
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `var(--black_grad, linear-gradient(180deg, rgba(255,255,255,0.00) 44.23%, rgba(0,0,0,0.80) 90.87%)), url(${posterImage})`,
+          backgroundImage: `url(${posterImage})`,
         }}
       />
 
