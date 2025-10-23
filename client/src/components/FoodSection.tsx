@@ -22,7 +22,7 @@ export function FoodSection({ lang, onDownloadPamphlet }: FoodSectionProps) {
         {getTranslation(lang, "food")}
       </h2>
 
-      <Accordion type="single" collapsible className="space-y-3">
+      <Accordion type="multiple" className="space-y-3">
         {foodZones.map((zone) => (
           <AccordionItem
             key={zone.id}

@@ -95,7 +95,7 @@ export function ProgramSection({
       </div>
 
       {/* 프로그램 카테고리 */}
-      <Accordion type="single" collapsible className="space-y-3">
+      <Accordion type="multiple" className="space-y-3">
         {filteredCategories.map((category) => (
           <AccordionItem
             key={category.id}
