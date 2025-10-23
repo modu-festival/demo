@@ -13,15 +13,14 @@ import { GoodsSection } from "@/components/GoodsSection";
 import { useToast } from "@/hooks/use-toast";
 import Footer from "@/components/Footer";
 
-// ✅ 중앙 기준 IntersectionObserver
+// ✅ 중앙 기준 IntersectionObserver (화면 중앙을 기준으로 탭 활성화)
 const OBSERVER_OPTIONS = {
   root: null,
-  rootMargin: "-50% 0px -50% 0px", // 화면 중앙 기준
+  rootMargin: "-50% 0px -50% 0px",
   threshold: 0,
 };
 
-const SCROLL_OFFSET = -70; // 탭 높이만큼 보정
-const SCROLL_TIMEOUT = 700; // smooth scroll 종료 대기
+const SCROLL_TIMEOUT = 1000; // smooth scroll 종료 대기 시간(ms)
 
 export default function Festival() {
   const [location, setLocation] = useLocation();
@@ -32,6 +31,7 @@ export default function Festival() {
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
+  // ✅ URL 기반 언어 설정
   useEffect(() => {
     if (location.startsWith("/en")) setLanguage("en");
     else if (location.startsWith("/ja")) setLanguage("ja");
@@ -39,12 +39,14 @@ export default function Festival() {
     else setLanguage("ko");
   }, [location]);
 
+  // ✅ 언어 변경 시 URL도 변경
   const handleLanguageChange = (newLang: Language) => {
     setLanguage(newLang);
     if (newLang === "ko") setLocation("/ko");
     else setLocation(`/${newLang}`);
   };
 
+  // ✅ 섹션 참조
   const sectionRefs = {
     gallery: useRef<HTMLDivElement>(null),
     food: useRef<HTMLDivElement>(null),
@@ -53,12 +55,12 @@ export default function Festival() {
     goods: useRef<HTMLDivElement>(null),
   };
 
-  // ✅ IntersectionObserver (스크롤 시 활성 탭 감지)
+  // ✅ IntersectionObserver: 스크롤 시 현재 섹션 감지 → 탭 활성화
   useEffect(() => {
     if (observerRef.current) observerRef.current.disconnect();
 
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      if (isUserInteraction) return; // 클릭 중이면 무시
+      if (isUserInteraction) return; // 클릭 중엔 무시
 
       const visibleEntry = entries.find((entry) => entry.isIntersecting);
       if (visibleEntry) {
@@ -88,27 +90,29 @@ export default function Festival() {
     if (!targetRef.current) return;
 
     setIsUserInteraction(true);
-    setActiveTab(tabId); // 클릭 시 바로 활성화
+    setActiveTab(tabId); // 클릭 즉시 활성화
 
-    const y =
-      targetRef.current.getBoundingClientRect().top +
-      window.scrollY +
-      SCROLL_OFFSET;
+    // ✅ 모바일 Safari / Android Chrome 호환성을 위해 scrollIntoView 사용
+    targetRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "center", // 섹션 상단을 화면 위쪽에 맞춤
+    });
 
-    window.scrollTo({ top: y, behavior: "smooth" });
-
+    // ✅ 스크롤 완료 후 observer 다시 활성화
     if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
     scrollTimeoutRef.current = setTimeout(() => {
       setIsUserInteraction(false);
     }, SCROLL_TIMEOUT);
   }, []);
 
+  // ✅ cleanup
   useEffect(() => {
     return () => {
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
     };
   }, []);
 
+  // ✅ AI 상담사 호출 (토스트 예시)
   const handleAICall = () => {
     toast({
       title:
@@ -120,6 +124,7 @@ export default function Festival() {
     });
   };
 
+  // ✅ 프로그램 팜플렛 다운로드
   const handleDownloadPDF = (programId?: string) => {
     const link = document.createElement("a");
     link.href = programId
@@ -141,6 +146,7 @@ export default function Festival() {
     });
   };
 
+  // ✅ 먹거리 팜플렛 다운로드
   const handleDownloadFoodPamphlet = () => {
     const link = document.createElement("a");
     link.href = "/api/download-pamphlet";
@@ -176,29 +182,34 @@ export default function Festival() {
         isUserInteraction={isUserInteraction}
       />
 
-      <div id="gallery" ref={sectionRefs.gallery}>
+      {/* ✅ scroll-margin-top으로 sticky 탭에 가리지 않게 처리 */}
+      <div id="gallery" ref={sectionRefs.gallery} className="scroll-mt-[80px]">
         <GallerySection lang={language} />
       </div>
 
-      <div id="food" ref={sectionRefs.food}>
+      <div id="food" ref={sectionRefs.food} className="scroll-mt-[80px]">
         <FoodSection
           lang={language}
           onDownloadPamphlet={handleDownloadFoodPamphlet}
         />
       </div>
 
-      <div id="location" ref={sectionRefs.location}>
+      <div
+        id="location"
+        ref={sectionRefs.location}
+        className="scroll-mt-[80px]"
+      >
         <LocationSection lang={language} />
       </div>
 
-      <div id="program" ref={sectionRefs.program}>
+      <div id="program" ref={sectionRefs.program} className="scroll-mt-[80px]">
         <ProgramSection
           lang={language}
           onDownloadPamphlet={handleDownloadPDF}
         />
       </div>
 
-      <div id="goods" ref={sectionRefs.goods}>
+      <div id="goods" ref={sectionRefs.goods} className="scroll-mt-[80px]">
         <GoodsSection lang={language} />
       </div>
 
