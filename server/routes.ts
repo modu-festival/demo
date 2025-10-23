@@ -175,6 +175,10 @@ Remember: keep answers concise and friendly. Wait for the user's request before 
     );
   });
 
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(process.cwd(), "dist", "index.html"));
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
