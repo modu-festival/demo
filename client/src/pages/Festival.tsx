@@ -84,7 +84,7 @@ export default function Festival() {
     return () => observer.disconnect();
   }, [isUserInteraction, activeTab]);
 
-  // ✅ 탭 클릭 → 해당 섹션으로 스크롤
+  // ✅ 탭 클릭 → 해당 섹션으로 스크롤 (모바일 호환 버전)
   const handleTabClick = useCallback((tabId: string) => {
     const targetRef = sectionRefs[tabId as keyof typeof sectionRefs];
     if (!targetRef.current) return;
@@ -92,10 +92,16 @@ export default function Festival() {
     setIsUserInteraction(true);
     setActiveTab(tabId); // 클릭 즉시 활성화
 
-    // ✅ 모바일 Safari / Android Chrome 호환성을 위해 scrollIntoView 사용
-    targetRef.current.scrollIntoView({
-      behavior: "smooth",
-      block: "center", // 섹션 상단을 화면 위쪽에 맞춤
+    // ✅ 모바일 Safari/Android에서도 동작하도록 직접 스크롤 계산
+    requestAnimationFrame(() => {
+      const rect = targetRef.current!.getBoundingClientRect();
+      const targetY =
+        window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2;
+
+      window.scrollTo({
+        top: targetY,
+        behavior: "smooth",
+      });
     });
 
     // ✅ 스크롤 완료 후 observer 다시 활성화
