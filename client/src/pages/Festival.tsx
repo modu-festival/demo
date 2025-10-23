@@ -13,25 +13,25 @@ import { GoodsSection } from "@/components/GoodsSection";
 import { useToast } from "@/hooks/use-toast";
 import Footer from "@/components/Footer";
 
-// IntersectionObserver 설정
+// ✅ 중앙 기준 IntersectionObserver
 const OBSERVER_OPTIONS = {
   root: null,
-  rootMargin: "-80px 0px -50% 0px",
+  rootMargin: "-50% 0px -50% 0px", // 화면 중앙 기준
   threshold: 0,
 };
 
-const SCROLL_OFFSET = -80;
-const SCROLL_TIMEOUT = 600;
+const SCROLL_OFFSET = -70; // 탭 높이만큼 보정
+const SCROLL_TIMEOUT = 700; // smooth scroll 종료 대기
 
 export default function Festival() {
-  const [location, setLocation] = useLocation(); // ✅ wouter 훅으로 현재 URL 가져오기
+  const [location, setLocation] = useLocation();
   const [language, setLanguage] = useState<Language>("ko");
   const [activeTab, setActiveTab] = useState<string>("gallery");
-  const [isUserInteraction, setIsUserInteraction] = useState<boolean>(false);
+  const [isUserInteraction, setIsUserInteraction] = useState(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
-  // ✅ URL에 따라 초기 언어 설정 (/en, /ja, /zh)
   useEffect(() => {
     if (location.startsWith("/en")) setLanguage("en");
     else if (location.startsWith("/ja")) setLanguage("ja");
@@ -39,10 +39,8 @@ export default function Festival() {
     else setLanguage("ko");
   }, [location]);
 
-  // ✅ 언어 셀렉터 변경 시 URL도 같이 변경
   const handleLanguageChange = (newLang: Language) => {
     setLanguage(newLang);
-    // URL을 바꿔서 공유 가능한 링크로 만듦
     if (newLang === "ko") setLocation("/ko");
     else setLocation(`/${newLang}`);
   };
@@ -55,19 +53,19 @@ export default function Festival() {
     goods: useRef<HTMLDivElement>(null),
   };
 
-  // IntersectionObserver
+  // ✅ IntersectionObserver (스크롤 시 활성 탭 감지)
   useEffect(() => {
+    if (observerRef.current) observerRef.current.disconnect();
+
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      if (isUserInteraction) return;
+      if (isUserInteraction) return; // 클릭 중이면 무시
 
-      const enteringEntries = entries
-        .filter((entry) => entry.isIntersecting)
-        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-
-      if (enteringEntries.length > 0) {
-        const topSection = enteringEntries[0];
-        const sectionId = topSection.target.id as string;
-        if (sectionId) setActiveTab(sectionId);
+      const visibleEntry = entries.find((entry) => entry.isIntersecting);
+      if (visibleEntry) {
+        const sectionId = visibleEntry.target.id;
+        if (sectionId && sectionId !== activeTab) {
+          setActiveTab(sectionId);
+        }
       }
     };
 
@@ -75,33 +73,34 @@ export default function Festival() {
       observerCallback,
       OBSERVER_OPTIONS
     );
+    observerRef.current = observer;
 
     Object.values(sectionRefs).forEach((ref) => {
       if (ref.current) observer.observe(ref.current);
     });
 
     return () => observer.disconnect();
-  }, [isUserInteraction]);
+  }, [isUserInteraction, activeTab]);
 
+  // ✅ 탭 클릭 → 해당 섹션으로 스크롤
   const handleTabClick = useCallback((tabId: string) => {
-    setIsUserInteraction(true);
-    setActiveTab(tabId);
-
     const targetRef = sectionRefs[tabId as keyof typeof sectionRefs];
-    if (targetRef.current) {
-      const y =
-        targetRef.current.getBoundingClientRect().top +
-        window.scrollY +
-        SCROLL_OFFSET;
+    if (!targetRef.current) return;
 
-      window.scrollTo({ top: y, behavior: "smooth" });
+    setIsUserInteraction(true);
+    setActiveTab(tabId); // 클릭 시 바로 활성화
 
-      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    const y =
+      targetRef.current.getBoundingClientRect().top +
+      window.scrollY +
+      SCROLL_OFFSET;
 
-      scrollTimeoutRef.current = setTimeout(() => {
-        setIsUserInteraction(false);
-      }, SCROLL_TIMEOUT);
-    }
+    window.scrollTo({ top: y, behavior: "smooth" });
+
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => {
+      setIsUserInteraction(false);
+    }, SCROLL_TIMEOUT);
   }, []);
 
   useEffect(() => {
@@ -123,15 +122,12 @@ export default function Festival() {
 
   const handleDownloadPDF = (programId?: string) => {
     const link = document.createElement("a");
-
-    if (programId) {
-      link.href = `/api/programs/${programId}/pamphlet`;
-      link.download = `program-${programId}.pdf`;
-    } else {
-      link.href = "/api/programs/pamphlet";
-      link.download = "full-timetable.pdf";
-    }
-
+    link.href = programId
+      ? `/api/programs/${programId}/pamphlet`
+      : "/api/programs/pamphlet";
+    link.download = programId
+      ? `program-${programId}.pdf`
+      : "full-timetable.pdf";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -167,16 +163,11 @@ export default function Festival() {
       <HeroSection
         lang={language}
         onAICall={handleAICall}
-        onLanguageChange={handleLanguageChange} // ✅ 변경된 핸들러 사용
+        onLanguageChange={handleLanguageChange}
       />
 
-      <div id="info">
-        <FestivalInfo lang={language} />
-      </div>
-
-      <div id="announcements">
-        <AnnouncementsSection lang={language} />
-      </div>
+      <FestivalInfo lang={language} />
+      <AnnouncementsSection lang={language} />
 
       <StickyTabs
         lang={language}
