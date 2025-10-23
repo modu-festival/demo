@@ -18,13 +18,24 @@ function resolveLang(input?: string): Lang {
 function greetingByLang(lang: Lang) {
   switch (lang) {
     case "en":
-      return "Hello! What would you like to know about the Siheung Gaetgol Festival?";
+      return `
+        Hello! I'm the AI assistant for the Siheung Gaetgol Festival. I can tell you about the festival schedule, programs, transportation, restaurants, and goods. Feel free to ask me anything!
+      `.trim();
+
     case "ja":
-      return "こんにちは！シフワ干潟（シフン・ゲッコル）フェスティバルについて何か知りたいことはありますか？";
+      return `
+        こんにちは！シフン・ゲッコル祭りのAI相談員です。開催日程、プログラム、交通、グルメ、グッズ情報などをご案内できます。何でもお気軽にお尋ねください！
+      `.trim();
+
     case "zh":
-      return "你好！关于始华（市兴）滩涂庆典，你想了解些什么？";
+      return `
+        你好！我是始兴滩涂庆典的AI咨询顾问。我可以介绍节日时间、节目、交通、美食和纪念品等信息。有什么想了解的都可以问我！
+      `.trim();
+
     default:
-      return "안녕하세요! 시흥갯골축제에 대해 무엇이 궁금하신가요?";
+      return `
+        안녕하세요! 저는 시흥갯골축제의 AI 상담사예요. 축제 일정, 프로그램, 교통, 맛집, 굿즈 정보 등을 알려드릴 수 있답니다. 무엇이든 편하게 물어보세요!
+      `.trim();
   }
 }
 
@@ -174,7 +185,7 @@ Remember: keep answers concise and friendly. Wait for the user's request before 
       }
     );
   });
-  
+
   const httpServer = createServer(app);
   return httpServer;
 }
