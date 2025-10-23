@@ -38,6 +38,19 @@ export function useRealtimeAI() {
     try {
       console.log(`[Realtime] Starting call for language: ${lang}`);
 
+      // ✅ 오디오 시스템 안정화 (모바일에서 중요)
+      const audioContext = new AudioContext();
+      await audioContext.resume();
+      console.log("[Realtime] AudioContext resumed ✅");
+
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        console.log(
+          "[Realtime] Waiting 1.5s for audio pipeline stabilization..."
+        );
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+
       // ✅ 서버에서 /session/:lang 호출
       const tokenRes = await fetch(`/session/${lang}`);
       const data = await tokenRes.json();
