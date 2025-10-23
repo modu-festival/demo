@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Phone } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   getTranslation,
   type Language,
@@ -22,6 +22,28 @@ export function HeroSection({
   const { startCall, endCall, isConnecting, isConnected } = useRealtimeAI();
   const languages: Language[] = ["ko", "en", "zh", "ja"];
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  // 폰트 로딩 체크
+  useEffect(() => {
+    const checkFonts = async () => {
+      try {
+        // 모든 폰트가 로드되었는지 확인
+        await Promise.all([
+          document.fonts.load("900 16px Yeongdo"),
+          document.fonts.load("500 16px GmarketSans"),
+          document.fonts.load("700 16px GmarketSans"),
+        ]);
+        setFontsLoaded(true);
+      } catch (error) {
+        console.warn("Font loading check failed:", error);
+        // 폰트 로딩 실패 시에도 UI를 표시
+        setFontsLoaded(true);
+      }
+    };
+
+    checkFonts();
+  }, []);
 
   const handleCallClick = async () => {
     onAICall();
@@ -422,31 +444,40 @@ export function HeroSection({
         {/* Main Title */}
         <div className="absolute inset-0 flex items-end justify-center pb-52 pointer-events-none">
           <div className="text-center">
-            <h1
-              className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6"
-              style={{
-                fontFamily: "Yeongdo, sans-serif",
-                whiteSpace: "pre-line",
-              }}
-            >
-              {getTranslation(lang, "heroTitle")}
-            </h1>
+            {fontsLoaded ? (
+              <>
+                <h1
+                  className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6"
+                  style={{
+                    fontFamily: "Yeongdo, sans-serif",
+                    whiteSpace: "pre-line",
+                  }}
+                >
+                  {getTranslation(lang, "heroTitle")}
+                </h1>
 
-            {/* Date and Time Info */}
-            <div className="text-white space-y-2">
-              <p
-                className="text-sm md:text-xl font-medium"
-                style={{ fontFamily: "GmarketSans, sans-serif" }}
-              >
-                {getTranslation(lang, "heroDate")}
-              </p>
-              <p
-                className="text-base md:text-lg font-bold"
-                style={{ fontFamily: "GmarketSans, sans-serif" }}
-              >
-                {getTranslation(lang, "heroLocation")}
-              </p>
-            </div>
+                {/* Date and Time Info */}
+                <div className="text-white space-y-2">
+                  <p
+                    className="text-sm md:text-xl font-medium"
+                    style={{ fontFamily: "GmarketSans, sans-serif" }}
+                  >
+                    {getTranslation(lang, "heroDate")}
+                  </p>
+                  <p
+                    className="text-base md:text-lg font-bold"
+                    style={{ fontFamily: "GmarketSans, sans-serif" }}
+                  >
+                    {getTranslation(lang, "heroLocation")}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 opacity-0">
+                {/* 폰트 로딩 중에는 완전히 투명하게 처리 */}
+                {getTranslation(lang, "heroTitle")}
+              </div>
+            )}
           </div>
         </div>
 
