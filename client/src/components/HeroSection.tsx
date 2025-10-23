@@ -420,15 +420,13 @@ export function HeroSection({
       {/* Content overlay */}
       <div className="relative z-10 flex h-full flex-col items-center justify-end pb-10">
         {/* Main Title */}
-        <div className="absolute inset-0 flex items-end justify-center pb-56">
+        <div className="absolute inset-0 flex items-end justify-center pb-52 pointer-events-none">
           <div className="text-center">
             <h1
               className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6"
-              style={{ fontFamily: "Yeongdo, sans-serif" }}
+              style={{ fontFamily: "Yeongdo, sans-serif", whiteSpace: "pre-line" }}
             >
-              20주년
-              <br />
-              시흥갯골축제
+              {getTranslation(lang, "heroTitle")}
             </h1>
 
             {/* Date and Time Info */}
@@ -437,13 +435,13 @@ export function HeroSection({
                 className="text-sm md:text-xl font-medium"
                 style={{ fontFamily: "GmarketSans, sans-serif" }}
               >
-                2025. 09. 26 (금) ~ 28 (일) / 3일간
+                {getTranslation(lang, "heroDate")}
               </p>
               <p
                 className="text-base md:text-lg font-bold"
                 style={{ fontFamily: "GmarketSans, sans-serif" }}
               >
-                시흥갯골생태공원
+                {getTranslation(lang, "heroLocation")}
               </p>
             </div>
           </div>

@@ -34,6 +34,9 @@ export const translations = {
     may: "9월",
     day: "일",
     programCountUnit: "개 프로그램",
+    heroTitle: "20주년\n시흥갯골축제",
+    heroDate: "2025. 09. 26 (금) ~ 28 (일) / 3일간",
+    heroLocation: "시흥갯골생태공원",
   },
   en: {
     aiCallButton: "Call AI Consultant",
@@ -66,6 +69,9 @@ export const translations = {
     may: "May",
     day: "",
     programCountUnit: " programs",
+    heroTitle: "20th Anniversary\nSiheung Gaetgol Festival",
+    heroDate: "Sep. 26 (Fri) ~ 28 (Sun), 2025 / 3 days",
+    heroLocation: "Siheung Gaetgol Ecological Park",
   },
   zh: {
     aiCallButton: "与AI顾问通话",
@@ -98,6 +104,9 @@ export const translations = {
     may: "5月",
     day: "日",
     programCountUnit: "个节目",
+    heroTitle: "20周年\n始兴盖谷节日",
+    heroDate: "2025年9月26日（周五）～28日（周日）/ 3天",
+    heroLocation: "始兴盖谷生态公园",
   },
   ja: {
     aiCallButton: "AIコンサルタントと通話",
@@ -130,6 +139,9 @@ export const translations = {
     may: "5月",
     day: "日",
     programCountUnit: "個プログラム",
+    heroTitle: "20周年\n始興ゲッコル祭り",
+    heroDate: "2025年9月26日（金）～28日（日）/ 3日間",
+    heroLocation: "始興ゲッコル生態公園",
   },
 };
 
