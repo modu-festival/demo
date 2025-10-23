@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useLocation } from "wouter";
 import type { Language } from "@shared/schema";
 import { HeroSection } from "@/components/HeroSection";
 import { FestivalInfo } from "@/components/FestivalInfo";
@@ -12,23 +13,39 @@ import { GoodsSection } from "@/components/GoodsSection";
 import { useToast } from "@/hooks/use-toast";
 import Footer from "@/components/Footer";
 
-// IntersectionObserver 설정 - 정확한 섹션 감지
-// rootMargin: 화면 상단 80px 아래 지점을 기준으로 감지 (sticky tab 높이 고려)
+// IntersectionObserver 설정
 const OBSERVER_OPTIONS = {
   root: null,
   rootMargin: "-80px 0px -50% 0px",
-  threshold: 0, // 단일 threshold로 깜빡임 방지
+  threshold: 0,
 };
 
 const SCROLL_OFFSET = -80;
-const SCROLL_TIMEOUT = 600; // 1000ms -> 600ms로 단축
+const SCROLL_TIMEOUT = 600;
 
 export default function Festival() {
+  const [location, setLocation] = useLocation(); // ✅ wouter 훅으로 현재 URL 가져오기
   const [language, setLanguage] = useState<Language>("ko");
   const [activeTab, setActiveTab] = useState<string>("gallery");
   const [isUserInteraction, setIsUserInteraction] = useState<boolean>(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+
+  // ✅ URL에 따라 초기 언어 설정 (/en, /ja, /zh)
+  useEffect(() => {
+    if (location.startsWith("/en")) setLanguage("en");
+    else if (location.startsWith("/ja")) setLanguage("ja");
+    else if (location.startsWith("/zh")) setLanguage("zh");
+    else setLanguage("ko");
+  }, [location]);
+
+  // ✅ 언어 셀렉터 변경 시 URL도 같이 변경
+  const handleLanguageChange = (newLang: Language) => {
+    setLanguage(newLang);
+    // URL을 바꿔서 공유 가능한 링크로 만듦
+    if (newLang === "ko") setLocation("/ko");
+    else setLocation(`/${newLang}`);
+  };
 
   const sectionRefs = {
     gallery: useRef<HTMLDivElement>(null),
@@ -38,30 +55,19 @@ export default function Festival() {
     goods: useRef<HTMLDivElement>(null),
   };
 
-  // IntersectionObserver 초기화 - 정확한 섹션 감지
+  // IntersectionObserver
   useEffect(() => {
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
-      // 사용자가 탭을 클릭 중인 경우 자동 업데이트 방지
-      if (isUserInteraction) {
-        return;
-      }
+      if (isUserInteraction) return;
 
-      // 가장 위에 있는 intersecting 섹션만 선택
       const enteringEntries = entries
         .filter((entry) => entry.isIntersecting)
-        .sort((a, b) => {
-          // y좌표 기준으로 정렬 (위에서부터 가장 먼저 만나는 섹션)
-          return a.boundingClientRect.top - b.boundingClientRect.top;
-        });
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
 
       if (enteringEntries.length > 0) {
-        // 가장 위에 있는 섹션을 활성화
         const topSection = enteringEntries[0];
         const sectionId = topSection.target.id as string;
-
-        if (sectionId) {
-          setActiveTab(sectionId);
-        }
+        if (sectionId) setActiveTab(sectionId);
       }
     };
 
@@ -71,9 +77,7 @@ export default function Festival() {
     );
 
     Object.values(sectionRefs).forEach((ref) => {
-      if (ref.current) {
-        observer.observe(ref.current);
-      }
+      if (ref.current) observer.observe(ref.current);
     });
 
     return () => observer.disconnect();
@@ -92,24 +96,17 @@ export default function Festival() {
 
       window.scrollTo({ top: y, behavior: "smooth" });
 
-      // 기존 타이머 제거
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
 
-      // 스크롤 완료 후 상태 초기화 (더 짧은 시간)
       scrollTimeoutRef.current = setTimeout(() => {
         setIsUserInteraction(false);
       }, SCROLL_TIMEOUT);
     }
   }, []);
 
-  // Cleanup: 언마운트 시 타이머 제거
   useEffect(() => {
     return () => {
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
     };
   }, []);
 
@@ -170,7 +167,7 @@ export default function Festival() {
       <HeroSection
         lang={language}
         onAICall={handleAICall}
-        onLanguageChange={setLanguage}
+        onLanguageChange={handleLanguageChange} // ✅ 변경된 핸들러 사용
       />
 
       <div id="info">

@@ -13,6 +13,7 @@ export function useRealtimeAI() {
 
   const peerRef = useRef<RTCPeerConnection | null>(null);
   const channelRef = useRef<RTCDataChannel | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const fns: FnMap = {
     navigateSection: ({ section }) => {
@@ -29,17 +30,23 @@ export function useRealtimeAI() {
     },
   };
 
-  async function startCall() {
+  /** ✅ 언어별 세션 요청 포함 */
+  async function startCall(lang: string = "ko") {
+    if (isConnecting || isConnected) return;
     setIsConnecting(true);
+
     try {
-      // ✅ 서버에서 session 생성
-      const tokenRes = await fetch("/session");
+      console.log(`[Realtime] Starting call for language: ${lang}`);
+
+      // ✅ 서버에서 /session/:lang 호출
+      const tokenRes = await fetch(`/session/${lang}`);
       const data = await tokenRes.json();
       const EPHEMERAL_KEY: string | undefined = data?.client_secret?.value;
+
       if (!EPHEMERAL_KEY)
         throw new Error("No ephemeral key received from server");
 
-      // WebRTC 연결 설정 최적화
+      // ✅ WebRTC 설정
       const pc = new RTCPeerConnection({
         iceServers: [
           { urls: "stun:stun.l.google.com:19302" },
@@ -50,36 +57,33 @@ export function useRealtimeAI() {
       });
       peerRef.current = pc;
 
-      // 🎧 오디오 출력 설정 - 품질 개선
+      // ✅ 오디오 출력 세팅
       const audio = new Audio();
       audio.autoplay = true;
-      audio.volume = 0.8; // 볼륨 조절
+      audio.volume = 0.9;
+      audioRef.current = audio;
 
       pc.ontrack = (event) => {
         const stream = event.streams[0];
         if (stream) {
-          // 오디오 스트림 설정 개선
-          const audioTracks = stream.getAudioTracks();
-          audioTracks.forEach((track) => {
-            // 오디오 트랙 설정 최적화
-            if (track.getSettings) {
-              const settings = track.getSettings();
-              console.log("Audio track settings:", settings);
-            }
-          });
-
           audio.srcObject = stream;
-          audio.play().catch((e) => console.warn("Audio play failed:", e));
+          audio
+            .play()
+            .catch((e) => console.warn("[Realtime] Audio play failed:", e));
         }
       };
 
       pc.onconnectionstatechange = () => {
-        if (pc.connectionState === "connected") {
-          console.log("✅ 연결 성공");
+        console.log("[Realtime] Connection state:", pc.connectionState);
+        if (
+          pc.connectionState === "failed" ||
+          pc.connectionState === "disconnected"
+        ) {
+          endCall();
         }
       };
 
-      // 🎙️ 마이크 스트림 추가 - 고품질 오디오 설정
+      // ✅ 마이크 입력 추가
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -89,32 +93,16 @@ export function useRealtimeAI() {
           channelCount: 1,
         },
       });
-
-      // 오디오 트랙 설정 최적화
-      stream.getAudioTracks().forEach((track) => {
-        const settings = track.getSettings();
-        console.log("Microphone settings:", settings);
-
-        // 트랙 제약 조건 설정
-        track
-          .applyConstraints({
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-          })
-          .catch((e) => console.warn("Track constraints failed:", e));
-      });
-
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
-      // 💬 데이터 채널 생성
+      // ✅ 데이터 채널 생성
       const ch = pc.createDataChannel("response");
       channelRef.current = ch;
 
       ch.onopen = () => {
-        console.log("✅ 데이터 채널 open");
+        console.log("[Realtime] Data channel open ✅");
 
-        // ✅ 서버의 instructions, voice는 그대로 두고 tools만 추가
+        // 세션 설정 업데이트 (navigateSection tool 등록)
         ch.send(
           JSON.stringify({
             type: "session.update",
@@ -149,7 +137,7 @@ export function useRealtimeAI() {
           })
         );
 
-        // 약간 지연 후 직접 인사 멘트 요청 (AI에게 “말해라”)
+        // AI 인사 (언어별 초기 멘트)
         setTimeout(() => {
           ch.send(
             JSON.stringify({
@@ -160,7 +148,14 @@ export function useRealtimeAI() {
                 content: [
                   {
                     type: "input_text",
-                    text: "통화가 연결되었습니다. 초기 응답이 준비가 전부 되고 난 후, 사용자에게 '안녕하세요. 20주년 시흥갯골축제에 대해 궁금한 게 있으신가요?' 라고 인사해주세요. 다른 말은 하지 마세요.",
+                    text:
+                      lang === "en"
+                        ? "The call is connected. After preparing your initial response, please say 'Hello! How can I help you with the Siheung Gaetgol Festival?'"
+                        : lang === "ja"
+                        ? "通話が接続されました。準備が完了したら、「こんにちは。シフン・ゲッコル祭りについて何か知りたいことはありますか？」と挨拶してください。"
+                        : lang === "zh"
+                        ? "通话已连接。准备好后，请说：'你好！想了解关于始兴海韵节的内容吗？'"
+                        : "통화가 연결되었습니다. 초기 응답 준비가 완료되면 '안녕하세요, 시흥갯골축제에 대해 궁금한 점이 있으신가요?'라고 인사해주세요.",
                   },
                 ],
               },
@@ -168,14 +163,12 @@ export function useRealtimeAI() {
           );
 
           ch.send(JSON.stringify({ type: "response.create" }));
-        }, 800); // 0.8초 지연
+        }, 700);
       };
 
-      // ✅ 함수 호출 처리
       ch.onmessage = async (ev) => {
         try {
           const msg = JSON.parse(ev.data);
-
           if (
             msg.type === "response.function_call_arguments.done" &&
             msg.name in fns
@@ -198,11 +191,11 @@ export function useRealtimeAI() {
             ch.send(JSON.stringify({ type: "response.create" }));
           }
         } catch (error) {
-          console.error("Data channel error:", error);
+          console.error("[Realtime] Data channel message error:", error);
         }
       };
 
-      // 🔄 Offer/Answer 교환
+      // ✅ SDP Offer/Answer 교환
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       await waitForIceGatheringComplete(pc);
@@ -227,31 +220,47 @@ export function useRealtimeAI() {
       await pc.setRemoteDescription(answer);
 
       setIsConnected(true);
+      console.log("[Realtime] ✅ Connected successfully");
     } catch (error) {
-      console.error("startCall error:", error);
+      console.error("[Realtime] startCall error:", error);
+      endCall();
     } finally {
       setIsConnecting(false);
     }
   }
 
+  /** ✅ 통화 종료 완전 정리 */
   function endCall() {
-    // 오디오 스트림 정리
-    if (peerRef.current) {
-      peerRef.current.getSenders().forEach((sender) => {
-        if (sender.track) {
-          sender.track.stop();
-        }
-      });
-      peerRef.current.close();
+    console.log("[Realtime] Ending call…");
+
+    try {
+      if (channelRef.current) {
+        channelRef.current.close();
+        channelRef.current = null;
+      }
+
+      if (peerRef.current) {
+        peerRef.current.getSenders().forEach((s) => s.track?.stop());
+        peerRef.current.close();
+        peerRef.current = null;
+      }
+
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.srcObject = null;
+      }
+    } catch (err) {
+      console.warn("[Realtime] endCall cleanup error:", err);
     }
 
-    channelRef.current = null;
     setIsConnected(false);
+    setIsConnecting(false);
   }
 
   return { startCall, endCall, isConnecting, isConnected };
 }
 
+/** ✅ ICE gathering 완료 대기 유틸 */
 function waitForIceGatheringComplete(pc: RTCPeerConnection): Promise<void> {
   if (pc.iceGatheringState === "complete") return Promise.resolve();
 

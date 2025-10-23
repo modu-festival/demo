@@ -10,6 +10,13 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Festival} />
+
+      <Route path="/ko" component={Festival} />
+      <Route path="/en" component={Festival} />
+      <Route path="/ja" component={Festival} />
+      <Route path="/zh" component={Festival} />
+
+      {/* ✅ 나머지는 404 처리 */}
       <Route component={NotFound} />
     </Switch>
   );

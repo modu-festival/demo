@@ -40,7 +40,7 @@ export function HeroSection({
       console.warn("Failed to create ring audio:", error);
     }
 
-    await startCall();
+    await startCall(lang);
   };
 
   const playRingToneAsync = () => {
@@ -424,7 +424,10 @@ export function HeroSection({
           <div className="text-center">
             <h1
               className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6"
-              style={{ fontFamily: "Yeongdo, sans-serif", whiteSpace: "pre-line" }}
+              style={{
+                fontFamily: "Yeongdo, sans-serif",
+                whiteSpace: "pre-line",
+              }}
             >
               {getTranslation(lang, "heroTitle")}
             </h1>
