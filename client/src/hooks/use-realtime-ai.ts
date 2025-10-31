@@ -179,9 +179,22 @@ export function useRealtimeAI() {
         }, 700);
       };
 
+      // ✅ 여기 추가됨
       ch.onmessage = async (ev) => {
         try {
           const msg = JSON.parse(ev.data);
+
+          // ✅ AI의 첫 안내 멘트가 끝났을 때 turn_detection 켜기
+          if (msg.type === "response.completed") {
+            console.log("[Realtime] Intro completed ✅ Turn detection ON");
+            ch.send(
+              JSON.stringify({
+                type: "session.update",
+                session: { turn_detection: "server_vad" },
+              })
+            );
+          }
+
           if (
             msg.type === "response.function_call_arguments.done" &&
             msg.name in fns
@@ -207,6 +220,7 @@ export function useRealtimeAI() {
           console.error("[Realtime] Data channel message error:", error);
         }
       };
+      // ✅ 여기까지 추가
 
       // ✅ SDP Offer/Answer 교환
       const offer = await pc.createOffer();

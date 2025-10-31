@@ -53,14 +53,13 @@ function langMeta(lang: Lang) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // 축제 정보 제공
   app.get("/festival", (_req: Request, res: Response) => {
     const filePath = path.join(process.cwd(), "server", "festival-info.json");
     const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
     res.json(data);
   });
 
-  // ✅ 언어별 세션 발급 (예: /session/en, /session/ko ...)
+  // ✅ 세션 생성 시 turn_detection 추가
   app.get("/session/:lang?", async (req: Request, res: Response) => {
     try {
       const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -83,18 +82,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         body: JSON.stringify({
           model: "gpt-4o-realtime-preview-2025-06-03",
-          // ⚠️ 인스트럭션은 “초기 인사 1회만” + “언어 자동 전환”
+          turn_detection: "none", // ✅ 인사 중엔 끊김 방지
           instructions: `
 You are the official voice assistant for '${festival.name}'.
 
-1) On the very first response after the call starts, say **exactly one** short greeting in ${langName}:
+1) On the very first response after the call starts, say exactly one short greeting in ${langName}:
 "${greet}"
-Then **stop and wait** for the user's question. Do not continue with a long introduction unless asked.
+Then stop and wait for the user's question.
 
-2) For every user utterance afterward:
-   - Detect the user's language automatically.
-   - Answer in that same language.
-   - If the user asks to switch languages (e.g., "answer in Russian"), switch immediately.
+2) After finishing the greeting, automatically re-enable turn detection:
+{ "type": "session.update", "session": { "turn_detection": "server_vad" } }
 
 3) When a question clearly maps to a UI section, first call:
    navigateSection({ section: "<one of: info, announcements, gallery, food, location, program, goods>" })
@@ -118,8 +115,6 @@ Festival facts (for reference):
 
 Remember: keep answers concise and friendly. Wait for the user's request before giving details beyond the greeting.
           `.trim(),
-          // (필요하면 목소리/속도 등 server에서 고정할 수도 있음)
-          // voice: "marin", // 예시
         }),
       });
 
@@ -136,7 +131,7 @@ Remember: keep answers concise and friendly. Wait for the user's request before 
     }
   });
 
-  // 다운로드 라우트들 (기존 그대로)
+  // ✅ 이하 원본 그대로
   app.get("/api/download-pamphlet", (_req: Request, res: Response) => {
     const filePath = path.join(
       process.cwd(),
