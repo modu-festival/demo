@@ -7,6 +7,7 @@ import {
   languageNames,
 } from "@/lib/translations";
 import { useRealtimeAI } from "@/hooks/use-realtime-ai";
+import posterVideo from "@assets/poster.mp4";
 
 interface HeroSectionProps {
   lang: Language;
@@ -22,7 +23,10 @@ export function HeroSection({
   const { startCall, endCall, isConnecting, isConnected } = useRealtimeAI();
   const languages: Language[] = ["ko", "en", "zh", "ja"];
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [showVideo, setShowVideo] = useState(true);
+  const [animationStarted, setAnimationStarted] = useState(false);
 
   // 폰트 로딩 체크
   useEffect(() => {
@@ -111,6 +115,8 @@ export function HeroSection({
 
   // Fireworks animation setup
   useEffect(() => {
+    if (!animationStarted) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -126,7 +132,7 @@ export function HeroSection({
       height = canvas.height = window.innerHeight;
     };
 
-    window.addEventListener("resize", resizeHandler);
+    window.addEventListener("resize", resizeHandler, { passive: true });
 
     // Particle class
     class Particle {
@@ -384,13 +390,13 @@ export function HeroSection({
     };
 
     const handleTouch = (e: TouchEvent) => {
-      e.preventDefault();
       const touch = e.touches[0];
       fireworks.push(new Firework(touch.clientX, touch.clientY));
     };
 
-    canvas.addEventListener("click", handleClick);
-    canvas.addEventListener("touchstart", handleTouch);
+    canvas.addEventListener("click", handleClick, { passive: true });
+    canvas.addEventListener("touchstart", handleTouch, { passive: true });
+    canvas.addEventListener("touchstart", handleTouch, { passive: true });
 
     // Initial welcome fireworks
     setTimeout(() => {
@@ -413,31 +419,51 @@ export function HeroSection({
       canvas.removeEventListener("touchstart", handleTouch);
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [animationStarted]);
 
   return (
     <div className="relative min-h-dvh h-screen w-full overflow-hidden">
-      {/* Fireworks Canvas Background */}
-      <div className="absolute inset-0 bg-[#0a0118]">
-        {/* Background gradient */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `
-              radial-gradient(ellipse at top, rgba(139, 69, 255, 0.15) 0%, transparent 50%),
-              radial-gradient(ellipse at bottom, rgba(255, 107, 237, 0.1) 0%, transparent 50%),
-              linear-gradient(180deg, #0a0118 0%, #1a0b2e 50%, #0a0118 100%)
-            `,
-          }}
-        />
+      {/* Video Background */}
+      {showVideo && (
+        <div className="absolute inset-0 bg-[#0a0118]">
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
+            style={{ opacity: showVideo ? 1 : 0 }}
+          >
+            <source src={posterVideo} type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
+        </div>
+      )}
 
-        {/* Canvas for fireworks animation */}
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 w-full h-full"
-          style={{ touchAction: "none" }}
-        />
-      </div>
+      {/* Fireworks Canvas Background */}
+      {animationStarted && (
+        <div className="absolute inset-0 bg-[#0a0118]">
+          {/* Background gradient */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `
+                radial-gradient(ellipse at top, rgba(139, 69, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom, rgba(255, 107, 237, 0.1) 0%, transparent 50%),
+                linear-gradient(180deg, #0a0118 0%, #1a0b2e 50%, #0a0118 100%)
+              `,
+            }}
+          />
+
+          {/* Canvas for fireworks animation */}
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 w-full h-full"
+            style={{ touchAction: "none" }}
+          />
+        </div>
+      )}
 
       {/* Content overlay */}
       <div className="relative z-10 flex h-full flex-col items-center justify-end pb-10">
