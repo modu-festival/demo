@@ -49,6 +49,42 @@ export function HeroSection({
     checkFonts();
   }, []);
 
+  // 비디오 자동 재생 처리 (모바일 대응)
+  useEffect(() => {
+    if (!showVideo || !videoRef.current) return;
+
+    const video = videoRef.current;
+
+    const playPromise = video.play();
+
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          // 자동 재생 성공
+          console.log("비디오 자동 재생 성공");
+        })
+        .catch((error) => {
+          // 자동 재생 실패 시 사용자 상호작용 후 재생 시도
+          console.log("비디오 자동 재생 실패, 사용자 상호작용 대기:", error);
+
+          const handleFirstInteraction = () => {
+            video.play().catch((err) => {
+              console.warn("비디오 재생 실패:", err);
+            });
+            document.removeEventListener("touchstart", handleFirstInteraction);
+            document.removeEventListener("click", handleFirstInteraction);
+          };
+
+          document.addEventListener("touchstart", handleFirstInteraction, {
+            once: true,
+          });
+          document.addEventListener("click", handleFirstInteraction, {
+            once: true,
+          });
+        });
+    }
+  }, [showVideo]);
+
   const handleCallClick = async () => {
     onAICall();
 
@@ -432,12 +468,13 @@ export function HeroSection({
             loop
             muted
             playsInline
+            preload="auto"
             className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
             style={{ opacity: showVideo ? 1 : 0 }}
           >
             <source src={posterVideo} type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 pointer-events-none" />
         </div>
       )}
 
