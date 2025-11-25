@@ -30,7 +30,9 @@ export function useRealtimeAI() {
     },
   };
 
-  /** ✅ 언어별 세션 요청 포함 */
+  /** ===============================
+   *  📞 START CALL
+   * =============================== */
   async function startCall(lang: string = "ko") {
     if (isConnecting || isConnected) return;
     setIsConnecting(true);
@@ -38,20 +40,18 @@ export function useRealtimeAI() {
     try {
       console.log(`[Realtime] Starting call for language: ${lang}`);
 
-      // ✅ 오디오 시스템 안정화 (모바일에서 중요)
+      // 오디오 안정화
       const audioContext = new AudioContext();
       await audioContext.resume();
-      console.log("[Realtime] AudioContext resumed ✅");
+      console.log("[Realtime] AudioContext resumed");
 
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobile) {
-        console.log(
-          "[Realtime] Waiting 1.5s for audio pipeline stabilization..."
-        );
+        console.log("[Realtime] Waiting for audio stabilization…");
         await new Promise((r) => setTimeout(r, 1500));
       }
 
-      // ✅ 서버에서 /session/:lang 호출
+      // 서버에서 ephemeral key 가져오기
       const tokenRes = await fetch(`/session/${lang}`);
       const data = await tokenRes.json();
       const EPHEMERAL_KEY: string | undefined = data?.client_secret?.value;
@@ -59,7 +59,7 @@ export function useRealtimeAI() {
       if (!EPHEMERAL_KEY)
         throw new Error("No ephemeral key received from server");
 
-      // ✅ WebRTC 설정
+      // WebRTC Peer
       const pc = new RTCPeerConnection({
         iceServers: [
           { urls: "stun:stun.l.google.com:19302" },
@@ -70,7 +70,7 @@ export function useRealtimeAI() {
       });
       peerRef.current = pc;
 
-      // ✅ 오디오 출력 세팅
+      // ====== 오디오 출력 ======
       const audio = new Audio();
       audio.autoplay = true;
       audio.volume = 0.9;
@@ -80,9 +80,7 @@ export function useRealtimeAI() {
         const stream = event.streams[0];
         if (stream) {
           audio.srcObject = stream;
-          audio
-            .play()
-            .catch((e) => console.warn("[Realtime] Audio play failed:", e));
+          audio.play().catch((e) => console.warn("Audio play failed:", e));
         }
       };
 
@@ -96,61 +94,77 @@ export function useRealtimeAI() {
         }
       };
 
-      // ✅ 마이크 입력 추가
+      // ====== 마이크 입력 ======
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 48000,
+          // 브라우저 지원 가능할 때만 적용됨
+          // @ts-ignore
+          voiceIsolation: true,
           channelCount: 1,
         },
       });
+
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
-      // ✅ 데이터 채널 생성
+      // ====== DataChannel ======
       const ch = pc.createDataChannel("response");
       channelRef.current = ch;
 
       ch.onopen = () => {
-        console.log("[Realtime] Data channel open ✅");
+        console.log("[Realtime] Data channel open");
 
-        // 세션 설정 업데이트 (navigateSection tool 등록)
-        ch.send(
-          JSON.stringify({
-            type: "session.update",
-            session: {
-              tools: [
-                {
-                  type: "function",
-                  name: "navigateSection",
-                  description:
-                    "Scroll page smoothly to a section (info, announcements, gallery, food, location, program, goods)",
-                  parameters: {
-                    type: "object",
-                    properties: {
-                      section: {
-                        type: "string",
-                        enum: [
-                          "info",
-                          "announcements",
-                          "gallery",
-                          "food",
-                          "location",
-                          "program",
-                          "goods",
-                        ],
-                      },
-                    },
-                    required: ["section"],
-                  },
-                },
-              ],
+        /** =========================
+         *  — 서버 VAD 설정 둔감하게
+         *  — Whisper transcription 활성화
+         *  — tools 등록 포함
+         * ========================= */
+        const sessionUpdateEvent = {
+          type: "session.update",
+          session: {
+            turn_detection: {
+              type: "server_vad",
+              threshold: 0.7,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 800,
             },
-          })
-        );
+            input_audio_transcription: {
+              model: "whisper-1",
+            },
+            tools: [
+              {
+                type: "function",
+                name: "navigateSection",
+                description:
+                  "Scroll page smoothly to a section (info, announcements, gallery, food, location, program, goods)",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    section: {
+                      type: "string",
+                      enum: [
+                        "info",
+                        "announcements",
+                        "gallery",
+                        "food",
+                        "location",
+                        "program",
+                        "goods",
+                      ],
+                    },
+                  },
+                  required: ["section"],
+                },
+              },
+            ],
+          },
+        };
 
-        // AI 인사 (언어별 초기 멘트)
+        ch.send(JSON.stringify(sessionUpdateEvent));
+
+        // ====== AI 인사 메시지 & 초기 응답 (현재 너 로직 유지) ======
         setTimeout(() => {
           ch.send(
             JSON.stringify({
@@ -165,10 +179,10 @@ export function useRealtimeAI() {
                       lang === "en"
                         ? "The call is connected. After preparing your initial response, please say 'Hello! How can I help you with the Siheung Gaetgol Festival?'"
                         : lang === "ja"
-                        ? "通話が接続されました。準備が完了したら、「こんにちは。シフン・ゲッコル祭りについて何か知りたいことはありますか？」と挨拶してください。"
+                        ? "通話が接続されました。準備が完了したら…"
                         : lang === "zh"
-                        ? "通话已连接。准备好后，请说：'你好！想了解关于始兴海韵节的内容吗？'"
-                        : "통화가 연결되었습니다. 초기 응답 준비가 완료되면 '안녕하세요, 시흥갯골축제에 대해 궁금한 점이 있으신가요?'라고 인사해주세요.",
+                        ? "通话已连接。准备好后…"
+                        : "통화가 연결되었습니다. 초기 응답 준비 후 인사해주세요.",
                   },
                 ],
               },
@@ -179,9 +193,11 @@ export function useRealtimeAI() {
         }, 700);
       };
 
+      // ====== AI → function_call 처리 ======
       ch.onmessage = async (ev) => {
         try {
           const msg = JSON.parse(ev.data);
+
           if (
             msg.type === "response.function_call_arguments.done" &&
             msg.name in fns
@@ -208,12 +224,13 @@ export function useRealtimeAI() {
         }
       };
 
-      // ✅ SDP Offer/Answer 교환
+      // ====== SDP Offer / Answer ======
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       await waitForIceGatheringComplete(pc);
 
       const model = "gpt-4o-realtime-preview-2025-06-03";
+
       const sdpResponse = await fetch(
         `https://api.openai.com/v1/realtime?model=${model}`,
         {
@@ -230,10 +247,11 @@ export function useRealtimeAI() {
         type: "answer" as RTCSdpType,
         sdp: await sdpResponse.text(),
       };
+
       await pc.setRemoteDescription(answer);
 
       setIsConnected(true);
-      console.log("[Realtime] ✅ Connected successfully");
+      console.log("[Realtime] Connected successfully");
     } catch (error) {
       console.error("[Realtime] startCall error:", error);
       endCall();
@@ -242,7 +260,9 @@ export function useRealtimeAI() {
     }
   }
 
-  /** ✅ 통화 종료 완전 정리 */
+  /** ===============================
+   *  📞 END CALL
+   * =============================== */
   function endCall() {
     console.log("[Realtime] Ending call…");
 
@@ -273,7 +293,7 @@ export function useRealtimeAI() {
   return { startCall, endCall, isConnecting, isConnected };
 }
 
-/** ✅ ICE gathering 완료 대기 유틸 */
+/** ICE Gathering 완료 대기 */
 function waitForIceGatheringComplete(pc: RTCPeerConnection): Promise<void> {
   if (pc.iceGatheringState === "complete") return Promise.resolve();
 
