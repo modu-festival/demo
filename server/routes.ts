@@ -21,17 +21,14 @@ function greetingByLang(lang: Lang) {
       return `
         Hello! I'm the AI assistant for the Siheung Gaetgol Festival. I can tell you about the festival schedule, programs, transportation, restaurants, and goods. Feel free to ask me anything!
       `.trim();
-
     case "ja":
       return `
         こんにちは！シフン・ゲッコル祭りのAI相談員です。開催日程、プログラム、交通、グルメ、グッズ情報などをご案内できます。何でもお気軽にお尋ねください！
       `.trim();
-
     case "zh":
       return `
         你好！我是始兴滩涂庆典的AI咨询顾问。我可以介绍节日时间、节目、交通、美食和纪念品等信息。有什么想了解的都可以问我！
       `.trim();
-
     default:
       return `
         안녕하세요! 저는 시흥갯골축제의 AI 상담사예요. 축제 일정, 프로그램, 교통, 맛집, 굿즈 정보 등을 알려드릴 수 있답니다. 무엇이든 편하게 물어보세요!
@@ -53,14 +50,18 @@ function langMeta(lang: Lang) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // 축제 정보 제공
+  // =========================
+  // 📌 축제 정보 제공
+  // =========================
   app.get("/festival", (_req: Request, res: Response) => {
     const filePath = path.join(process.cwd(), "server", "festival-info.json");
     const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
     res.json(data);
   });
 
-  // ✅ 언어별 세션 발급 (예: /session/en, /session/ko ...)
+  // =========================
+  // 📌 음성 안내용 세션 발급
+  // =========================
   app.get("/session/:lang?", async (req: Request, res: Response) => {
     try {
       const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -70,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const lang = resolveLang(req.params.lang);
       const greet = greetingByLang(lang);
-      const { name: langName, code: langCode } = langMeta(lang);
+      const { name: langName } = langMeta(lang);
 
       const filePath = path.join(process.cwd(), "server", "festival-info.json");
       const festival = JSON.parse(fs.readFileSync(filePath, "utf-8"));
@@ -83,43 +84,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         body: JSON.stringify({
           model: "gpt-4o-realtime-preview-2025-06-03",
-          // ⚠️ 인스트럭션은 “초기 인사 1회만” + “언어 자동 전환”
           instructions: `
 You are the official voice assistant for '${festival.name}'.
 
-1) On the very first response after the call starts, say **exactly one** short greeting in ${langName}:
+1) On the very first response after the call starts, say exactly one short greeting in ${langName}:
 "${greet}"
-Then **stop and wait** for the user's question. Do not continue with a long introduction unless asked.
+Then stop and wait for the user's question.
 
 2) For every user utterance afterward:
    - Detect the user's language automatically.
    - Answer in that same language.
-   - If the user asks to switch languages (e.g., "answer in Russian"), switch immediately.
 
-3) When a question clearly maps to a UI section, first call:
-   navigateSection({ section: "<one of: info, announcements, gallery, food, location, program, goods>" })
-   Then speak your answer.
+3) When a question clearly maps to a UI section, call:
+   navigateSection({ section: "info|announcements|gallery|food|location|program|goods" })
+   Then speak the answer.
 
-Festival facts (for reference):
-- Period: ${festival.period}
-- Location: ${festival.location}
-- Organizer: ${festival.organizers}
-- Contact: ${festival.contact}
-- Admission: ${festival.price}
-- Programs: ${(festival.programs || []).join(", ")}
-- Transport: ${festival.transport}
-- Lost & Found: ${festival.lostAndFound}
-- Restaurants: ${(festival.restaurants || [])
-            .map((r: any) => `${r.name} (${r.type}) — ${r.address}`)
-            .join("; ")}
-- Goods: ${(festival.goods || [])
-            .map((g: any) => `${g.name} (${g.price}) — ${g.description}`)
-            .join("; ")}
+Festival facts:
+${JSON.stringify(festival, null, 2)}
 
-Remember: keep answers concise and friendly. Wait for the user's request before giving details beyond the greeting.
+Keep answers concise and friendly.
           `.trim(),
-          // (필요하면 목소리/속도 등 server에서 고정할 수도 있음)
-          // voice: "marin", // 예시
         }),
       });
 
@@ -136,7 +120,136 @@ Remember: keep answers concise and friendly. Wait for the user's request before 
     }
   });
 
-  // 다운로드 라우트들 (기존 그대로)
+  // =========================
+  // 🟦 Chatbot: Chat Completions
+  // =========================
+  // =========================
+  // 🟦 Chatbot: Chat Completions (+ 후속 질문 생성)
+  // =========================
+  app.post("/api/chat", async (req: Request, res: Response) => {
+    try {
+      const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+      if (!OPENAI_API_KEY) {
+        return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
+      }
+
+      const { message } = req.body;
+      if (!message) {
+        return res.status(400).json({ error: "Message is required" });
+      }
+
+      // 축제 데이터 로딩
+      const filePath = path.join(process.cwd(), "server", "festival-info.json");
+      const festival = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+
+      // ----------------------------
+      // 1) 본문 답변 생성
+      // ----------------------------
+      const apiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: `You are the official chatbot of the Siheung Gaetgol Festival.
+
+=== Language Rules ===
+- Detect the user's language automatically (any language).
+- ALWAYS respond in the same language.
+
+=== Information Rules ===
+- Use the festival information below as the primary and most accurate source of truth.
+- For questions covered in the data, answer strictly based on the official festival facts.
+- For questions NOT explicitly covered in the data:
+    • Use general festival knowledge, common-sense reasoning, and typical event operations to provide a helpful answer.
+    • NEVER fabricate specific facts (times, locations, prices, etc.) that are not listed in the festival data.
+    • If exact details cannot be confirmed, respond with a helpful general explanation AND a gentle note that the precise information is not provided in the official data.
+
+=== Style Rules ===
+- Be friendly, concise, and helpful.
+- Offer additional helpful context when appropriate.
+- Suggest related topics the user may want to ask.
+
+Festival information (authoritative data):
+${JSON.stringify(festival, null, 2)}
+            `,
+            },
+            { role: "user", content: message },
+          ],
+        }),
+      });
+
+      const data = await apiRes.json();
+      if (!apiRes.ok) {
+        console.error("Chat error:", data);
+        return res.status(apiRes.status).json(data);
+      }
+
+      const reply = data.choices?.[0]?.message?.content ?? "";
+
+      // ----------------------------
+      // 2) 📌 Follow-up questions 생성
+      // ----------------------------
+      const followRes = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${OPENAI_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              {
+                role: "system",
+                content: `
+You generate 3 short follow-up questions relevant to the user's message.
+Detect the user's language automatically (support any language) and respond ONLY in that language.
+Return ONLY a JSON array of strings.
+
+Example:
+["행사장 입장 시간은?","우천 시 대피장소는?","가족 프로그램도 있어?"]
+            `.trim(),
+              },
+              { role: "user", content: message },
+              { role: "assistant", content: reply },
+            ],
+          }),
+        }
+      );
+
+      let followUp = [];
+      try {
+        const followJson = await followRes.json();
+        const text = followJson?.choices?.[0]?.message?.content ?? "[]";
+        followUp = JSON.parse(text);
+        if (!Array.isArray(followUp)) followUp = [];
+      } catch (e) {
+        followUp = [];
+      }
+
+      // ----------------------------
+      // 3) 클라이언트로 전달
+      // ----------------------------
+      res.json({
+        reply,
+        followUp, // 📌 추가됨!
+      });
+    } catch (err) {
+      console.error("Chat API error:", err);
+      res.status(500).json({ error: "Failed to process chat request" });
+    }
+  });
+
+  // =========================
+  // 📄 다운로드 라우트들 (그대로)
+  // =========================
   app.get("/api/download-pamphlet", (_req: Request, res: Response) => {
     const filePath = path.join(
       process.cwd(),

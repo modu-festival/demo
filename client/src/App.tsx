@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Festival from "@/pages/Festival";
 import NotFound from "@/pages/not-found";
+import ChatbotButton from "@/components/ChatbotButton";
 
 function Router() {
   return (
@@ -28,6 +29,7 @@ function App() {
       <TooltipProvider>
         <Toaster />
         <Router />
+        <ChatbotButton />
       </TooltipProvider>
     </QueryClientProvider>
   );
