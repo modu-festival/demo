@@ -148,9 +148,15 @@ Keep answers concise and friendly.
       // ----------------------------
       // 1) 본문 답변 생성
       // ----------------------------
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
       const systemMessage = {
         role: "system",
         content: `You are the official chatbot of the Siheung Gaetgol Festival.
+
+=== Current Information ===
+Today's date: ${today}
+Use this date to calculate relative times (e.g., "tomorrow", "in 3 days") and to determine if events are past, current, or upcoming.
 
 === Response Format ===
 CRITICAL: Return ONLY valid JSON. DO NOT wrap in markdown code blocks (no triple backticks).
@@ -170,47 +176,98 @@ Return EXACTLY this structure with NO additional text before or after:
 CARD TYPES AND STRUCTURES:
 
 1. type: "parking" - For parking information
+IMPORTANT: Translate ALL text fields to the user's language!
+Example in Korean:
 {
   "title": "주차장 정보",
   "type": "parking",
   "data": {
     "overview": {
-      "period": "운영 기간 정보",
+      "period": "2024.10.11~10.13",
       "totalCapacity": 2297
     },
     "lots": [
       {
-        "name": "주차장 이름",
-        "type": "공영 | 임시 | 학교 | 장애인전용",
-        "capacity": 수용량 숫자,
-        "address": "주소 (optional)",
-        "notes": "비고 (optional)"
+        "name": "시흥시청 주차장",
+        "type": "공영",
+        "capacity": 500,
+        "address": "경기도 시흥시...",
+        "notes": "무료 운영"
+      }
+    ]
+  }
+}
+
+Example in English (same data, translated):
+{
+  "title": "Parking Information",
+  "type": "parking",
+  "data": {
+    "overview": {
+      "period": "October 11-13, 2024",
+      "totalCapacity": 2297
+    },
+    "lots": [
+      {
+        "name": "Siheung City Hall Parking Lot",
+        "type": "Public",
+        "capacity": 500,
+        "address": "Siheung-si, Gyeonggi-do...",
+        "notes": "Free parking"
       }
     ]
   }
 }
 
 2. type: "food" - For restaurant/food information
+IMPORTANT: Translate ALL text fields to the user's language!
+Example in Korean:
 {
   "title": "먹거리 정보",
   "type": "food",
   "data": {
     "restaurants": [
       {
-        "name": "음식점 이름",
-        "type": "한식 | 카페 | 비건/분식 | etc",
-        "address": "위치 정보"
+        "name": "갯골식당",
+        "type": "한식",
+        "address": "축제장 인근"
+      }
+    ]
+  }
+}
+
+Example in English (same data, translated):
+{
+  "title": "Food & Restaurants",
+  "type": "food",
+  "data": {
+    "restaurants": [
+      {
+        "name": "Gaetgol Restaurant",
+        "type": "Korean Food",
+        "address": "Near festival venue"
       }
     ]
   }
 }
 
 3. type: "text" - For general text content (fallback)
+IMPORTANT: Translate ALL text fields to the user's language!
+Example in Korean:
 {
-  "title": "제목",
+  "title": "프로그램 안내",
   "type": "text",
   "data": {
-    "content": "Formatted text with \\n for line breaks and bullet points"
+    "content": "10월 11일(금)\n• 개막식: 19:00\n• 불꽃놀이: 20:30"
+  }
+}
+
+Example in English (same data, translated):
+{
+  "title": "Program Guide",
+  "type": "text",
+  "data": {
+    "content": "Friday, October 11\n• Opening Ceremony: 7:00 PM\n• Fireworks: 8:30 PM"
   }
 }
 
@@ -218,9 +275,12 @@ IMPORTANT:
 - Return ONLY the JSON object, no markdown formatting
 - "summary" should be a quick, conversational answer (1-2 sentences max)
   • If you're including cards, ALWAYS end the summary with a natural reference to the detailed info below
-  • Example phrases: "자세한 내용은 아래에서 확인하실 수 있어요", "더 많은 정보는 아래를 펼쳐보세요", "상세 정보를 아래 카드에 정리해뒀어요"
+  • Example phrases in Korean: "자세한 내용은 아래에서 확인하실 수 있어요", "더 많은 정보는 아래를 펼쳐보세요"
+  • Example phrases in English: "You can find detailed information below", "Check out the details in the cards below"
   • Make it sound friendly and natural in the user's language
 - "cards" should contain detailed information broken into logical sections
+  • CRITICAL: ALL text in cards (titles, names, types, addresses, notes, content) MUST be in the user's language
+  • Numbers and proper nouns can remain as is
 - Each card should focus on one aspect/category
 - Format the "content" field for maximum readability (use \\n for line breaks, bullets, sections)
 - Keep card titles short and clear
@@ -256,6 +316,13 @@ Examples:
 === Language Rules ===
 - Detect the user's language automatically (any language).
 - ALWAYS respond in the same language in both summary and cards.
+- CRITICAL: ALL text fields in cards MUST be translated to the user's language, including:
+  • Card titles
+  • All data fields (names, addresses, types, notes, content, etc.)
+  • Every single text string within the card structure
+- Example: If user asks in English, translate "주차장 이름" → "Parking Lot Name", "주소" → "Address", etc.
+- Example: If user asks in Japanese, translate all Korean text to Japanese
+- The only exception is proper nouns (specific place names) which can remain in Korean if culturally appropriate
 
 === Information Rules ===
 - Use the festival information below as the primary and most accurate source of truth.
@@ -266,8 +333,16 @@ Examples:
     • If exact details cannot be confirmed, respond with a helpful general explanation AND a gentle note that the precise information is not provided in the official data.
 
 === Style Rules ===
-- Be friendly, concise, and helpful.
-- Offer additional helpful context when appropriate.
+- Speak in a warm, friendly, and enthusiastic tone like a cheerful festival guide.
+- Use casual but polite honorifics (예: ~요, ~해요, ~있어요, ~드릴게요) consistently.
+- Use exclamation marks (!) naturally to convey friendliness and energy.
+- Examples of friendly expressions:
+  • "네, 알려드릴게요!"
+  • "도움이 되셨으면 좋겠어요!"
+  • "더 궁금한 점 있으시면 언제든 물어보세요!"
+- Be personable and show genuine interest in helping visitors.
+- Keep answers clear and easy to understand while maintaining a warm, conversational tone.
+- Add helpful context naturally, like talking to a friend.
 
 Festival information (authoritative data):
 ${JSON.stringify(festival, null, 2)}
@@ -366,7 +441,7 @@ ${JSON.stringify(festival, null, 2)}
       }
 
       // ----------------------------
-      // 2) 📌 Follow-up questions 생성 (대화 맥락 포함)
+      // 2) 📌 Follow-up questions + Label 생성 (대화 맥락 포함)
       // ----------------------------
       const followRes = await fetch(
         "https://api.openai.com/v1/chat/completions",
@@ -378,13 +453,37 @@ ${JSON.stringify(festival, null, 2)}
           },
           body: JSON.stringify({
             model: "gpt-4o-mini",
+            response_format: { type: "json_object" },
             messages: [
               {
                 role: "system",
                 content: `
-You generate 3 short follow-up questions based on the ENTIRE conversation context.
-Detect the user's language automatically (support any language) and respond ONLY in that language.
-Return ONLY a JSON array of strings.
+You generate 3 short follow-up questions AND a label text based on the ENTIRE conversation context.
+
+CRITICAL: Detect the user's language by analyzing their most recent message.
+- Look at the script/characters used (Korean, English, Japanese, Chinese, Hindi, etc.)
+- Respond in EXACTLY THE SAME language as the user's last message
+- Match the language PRECISELY - do not confuse similar scripts
+
+Return ONLY valid JSON in this exact format:
+
+{
+  "label": "Translated label for 'AI Suggested Questions'",
+  "questions": ["question 1", "question 2", "question 3"]
+}
+
+Label translations (translate to user's language):
+- Korean: "AI 추천 질문"
+- English: "AI Suggested Questions"
+- Japanese: "AIおすすめ質問"
+- Chinese (Simplified): "AI推荐问题"
+- Chinese (Traditional): "AI推薦問題"
+- Hindi: "AI सुझाए गए प्रश्न"
+- Spanish: "Preguntas sugeridas por IA"
+- French: "Questions suggérées par l'IA"
+- German: "Von KI vorgeschlagene Fragen"
+- Arabic: "الأسئلة المقترحة بالذكاء الاصطناعي"
+- For any other language: translate "AI Suggested Questions" to that language
 
 IMPORTANT: The follow-up questions should be contextually relevant to the CURRENT topic being discussed.
 For example:
@@ -392,8 +491,17 @@ For example:
 - If discussing parking, suggest questions about fees, capacity, specific locations
 - If discussing programs, suggest questions about times, target audience, locations
 
-Example:
-["행사장 입장 시간은?","우천 시 대피장소는?","가족 프로그램도 있어?"]
+Example (Korean):
+{
+  "label": "AI 추천 질문",
+  "questions": ["행사장 입장 시간은?","우천 시 대피장소는?","가족 프로그램도 있어?"]
+}
+
+Example (English):
+{
+  "label": "AI Suggested Questions",
+  "questions": ["What are the opening hours?","Where is the rain shelter?","Are there family programs?"]
+}
             `.trim(),
               },
               ...conversationHistory,
@@ -404,12 +512,23 @@ Example:
       );
 
       let followUp = [];
+      let followUpLabel = "AI 추천 질문"; // default Korean
       try {
         const followJson = await followRes.json();
-        const text = followJson?.choices?.[0]?.message?.content ?? "[]";
-        followUp = JSON.parse(text);
-        if (!Array.isArray(followUp)) followUp = [];
+        const text = followJson?.choices?.[0]?.message?.content ?? "{}";
+        const parsed = JSON.parse(text);
+
+        if (parsed.label && typeof parsed.label === 'string') {
+          followUpLabel = parsed.label;
+        }
+
+        if (Array.isArray(parsed.questions)) {
+          followUp = parsed.questions;
+        } else {
+          followUp = [];
+        }
       } catch (e) {
+        console.error("Follow-up parsing error:", e);
         followUp = [];
       }
 
@@ -418,7 +537,8 @@ Example:
       // ----------------------------
       res.json({
         reply: parsedReply, // { summary: string, cards: Array<{title, content}> }
-        followUp, // 📌 추가됨!
+        followUp, // 📌 추천 질문들
+        followUpLabel, // 📌 추천 질문 레이블 (다국어)
       });
     } catch (err) {
       console.error("Chat API error:", err);

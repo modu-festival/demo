@@ -190,6 +190,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
   const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>(() =>
     ALL_SUGGESTED_PROMPTS.slice(0, 3)
   );
+  const [promptLabel, setPromptLabel] = useState("AI 추천 질문");
   const [isThinking, setIsThinking] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
@@ -396,6 +397,8 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         ? data.followUp
         : [];
 
+      const aiFollowUpLabel: string = data?.followUpLabel || "AI 추천 질문";
+
       // 시각적 요소 파싱 (URL 등)
       const { mainText, extraMessages } = parseAIReply(summary);
 
@@ -423,6 +426,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
       // ----------------------------------------
       if (aiFollowUps.length > 0) {
         setSuggestedPrompts(aiFollowUps);
+        setPromptLabel(aiFollowUpLabel);
       } else {
         refreshSuggestedPrompts(); // 기존 fallback
       }
@@ -466,6 +470,10 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
   // 엔터키 전송
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
+      // IME 입력 중일 때는 무시 (한국어, 일본어, 중국어 등)
+      if (e.nativeEvent.isComposing) {
+        return;
+      }
       e.preventDefault();
       handleSend();
     }
@@ -527,7 +535,8 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         {/* Chat Area */}
         <div className="flex-1 overflow-y-auto p-4">
           {messages.length === 0 ? (
-            <div className="flex h-full flex-col items-start justify-center px-2 pb-24">
+            <div className="flex h-full items-center justify-center px-2 pb-24">
+              <div className="w-full max-w-2xl flex flex-col items-start">
               {/* AI Image */}
               <img
                 src="/img-ai.webp"
@@ -561,6 +570,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                   </button>
                 ))}
                 </div>
+              </div>
               </div>
             </div>
           ) : (
@@ -621,7 +631,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                         {message.role === "assistant" && message.content && (
                           <button
                             onClick={() => handleCopy(message.id, message.content)}
-                            className="flex-shrink-0 p-1.5 rounded-lg hover:bg-gray-200/50 transition-colors mb-1"
+                            className="flex-shrink-0 p-1.5 transition-colors mb-1"
                             aria-label="Copy message"
                           >
                             {copiedId === message.id ? (
@@ -661,7 +671,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
               {/* typing... indicator */}
               {isThinking && (
                 <div className="flex justify-start">
-                  <div className="inline-flex items-center gap-1 rounded-2xl bg-gray-100 px-3 py-2">
+                  <div className="inline-flex items-center gap-1 rounded-2xl bg-gray-200 px-5 py-4">
                     <span className="typing-dot" />
                     <span className="typing-dot" />
                     <span className="typing-dot" />
@@ -671,16 +681,28 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
 
               {/* 후속 추천 질문 (대화 중에도 표시) */}
               {!isThinking && suggestedPrompts.length > 0 && (
-                <div className="mt-4 grid w-full gap-2">
-                  {suggestedPrompts.map((prompt, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handlePromptClick(prompt)}
-                      className="rounded-tr-2xl rounded-br-2xl rounded-bl-2xl border border-gray-100 px-4 py-3 text-left text-sm text-gray-700 font-medium transition-colors bg-white/90 backdrop-blur-sm hover:bg-white/95"
-                    >
-                      {prompt}
-                    </button>
-                  ))}
+                <div className="pt-2 w-full space-y-3">
+                  <div className="flex items-center gap-2 ml-1">
+                    <img
+                      src="/img-ai.webp"
+                      alt="AI"
+                      className="w-5 h-5 object-contain"
+                    />
+                    <p className="text-[13px] font-medium text-gray-900 -tracking-[0.02em]">
+                      {promptLabel}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-x-1.5 gap-y-2">
+                    {suggestedPrompts.map((prompt, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handlePromptClick(prompt)}
+                        className="rounded-full border border-gray-300 px-4 py-[12px] text-left text-sm text-gray-800 font-medium transition-colors backdrop-blur-sm -tracking-[0.02em]"
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -691,7 +713,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-gray-200/50 p-4 bg-white/70 backdrop-blur-md">
+        <div className="p-4 bg-white/70 backdrop-blur-md">
           <div className="mx-auto max-w-2xl">
             <div className="relative flex items-end">
               <textarea
@@ -706,7 +728,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
               <button
                 onClick={handleSend}
                 disabled={!input.trim()}
-                className="absolute right-1.5 bottom-1.5 flex h-9 w-9 items-center justify-center rounded-full bg-gray-900 text-white transition-opacity disabled:opacity-50"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-gray-900 text-white transition-opacity disabled:opacity-50"
                 aria-label="Send message"
               >
                 <ArrowUp className="h-5 w-5" />
