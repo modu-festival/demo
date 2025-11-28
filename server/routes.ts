@@ -133,7 +133,7 @@ Keep answers concise and friendly.
         return res.status(500).json({ error: "Missing OPENAI_API_KEY" });
       }
 
-      const { message } = req.body;
+      const { message, history } = req.body;
       if (!message) {
         return res.status(400).json({ error: "Message is required" });
       }
@@ -142,25 +142,120 @@ Keep answers concise and friendly.
       const filePath = path.join(process.cwd(), "server", "festival-info.json");
       const festival = JSON.parse(fs.readFileSync(filePath, "utf-8"));
 
+      // 대화 히스토리 구성 (최근 10개만 사용)
+      const conversationHistory = Array.isArray(history) ? history.slice(-10) : [];
+
       // ----------------------------
       // 1) 본문 답변 생성
       // ----------------------------
-      const apiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "gpt-4o",
-          messages: [
-            {
-              role: "system",
-              content: `You are the official chatbot of the Siheung Gaetgol Festival.
+      const systemMessage = {
+        role: "system",
+        content: `You are the official chatbot of the Siheung Gaetgol Festival.
+
+=== Response Format ===
+CRITICAL: Return ONLY valid JSON. DO NOT wrap in markdown code blocks (no triple backticks).
+Return EXACTLY this structure with NO additional text before or after:
+
+{
+  "summary": "A brief, friendly 1-2 sentence answer",
+  "cards": [
+    {
+      "title": "Card title",
+      "type": "parking | program | food | goods | keyvalue | list | text",
+      "data": { /* structure depends on type */ }
+    }
+  ]
+}
+
+CARD TYPES AND STRUCTURES:
+
+1. type: "parking" - For parking information
+{
+  "title": "주차장 정보",
+  "type": "parking",
+  "data": {
+    "overview": {
+      "period": "운영 기간 정보",
+      "totalCapacity": 2297
+    },
+    "lots": [
+      {
+        "name": "주차장 이름",
+        "type": "공영 | 임시 | 학교 | 장애인전용",
+        "capacity": 수용량 숫자,
+        "address": "주소 (optional)",
+        "notes": "비고 (optional)"
+      }
+    ]
+  }
+}
+
+2. type: "food" - For restaurant/food information
+{
+  "title": "먹거리 정보",
+  "type": "food",
+  "data": {
+    "restaurants": [
+      {
+        "name": "음식점 이름",
+        "type": "한식 | 카페 | 비건/분식 | etc",
+        "address": "위치 정보"
+      }
+    ]
+  }
+}
+
+3. type: "text" - For general text content (fallback)
+{
+  "title": "제목",
+  "type": "text",
+  "data": {
+    "content": "Formatted text with \\n for line breaks and bullet points"
+  }
+}
+
+IMPORTANT:
+- Return ONLY the JSON object, no markdown formatting
+- "summary" should be a quick, conversational answer (1-2 sentences max)
+  • If you're including cards, ALWAYS end the summary with a natural reference to the detailed info below
+  • Example phrases: "자세한 내용은 아래에서 확인하실 수 있어요", "더 많은 정보는 아래를 펼쳐보세요", "상세 정보를 아래 카드에 정리해뒀어요"
+  • Make it sound friendly and natural in the user's language
+- "cards" should contain detailed information broken into logical sections
+- Each card should focus on one aspect/category
+- Format the "content" field for maximum readability (use \\n for line breaks, bullets, sections)
+- Keep card titles short and clear
+
+WHEN TO USE CARDS AND WHICH TYPE:
+CRITICAL: Use cards ONLY when the user is asking for COMPREHENSIVE or DETAILED information.
+DO NOT use cards for specific, narrow questions that can be answered simply.
+
+Question Scope Analysis:
+- BROAD questions (전체 정보, 목록, 상세 안내) → USE CARDS
+- SPECIFIC questions (특정 항목, 단순 사실) → NO CARDS, just summary
+
+Choose the appropriate card type based on the question content:
+  • Parking questions asking for FULL INFO → type: "parking"
+  • Food/restaurant questions asking for FULL INFO → type: "food"
+  • Program/schedule questions asking for FULL INFO → type: "program" (not implemented yet, use "text" as fallback)
+  • Goods/merchandise questions asking for FULL INFO → type: "goods" (not implemented yet, use "text" as fallback)
+  • General detailed info → type: "text"
+
+Examples:
+✅ USE CARDS:
+- "주차장이 있나요?" / "주차장 정보 알려줘" → summary + cards: [{ type: "parking" }]
+- "먹을 거 뭐 있어요?" / "음식점 알려줘" → summary + cards: [{ type: "food" }]
+- "프로그램 뭐 있어요?" → summary + cards: [{ type: "text" }]
+
+❌ NO CARDS (summary only):
+- "주차 요금이 얼마예요?" → "무료입니다"
+- "주차장 몇 개 있어요?" → "총 8개 주차장이 운영됩니다"
+- "주차장 운영시간은?" → "09:00~22:00에 운영됩니다"
+- "안녕하세요" → "안녕하세요!"
+- "몇 시까지 해요?" → "22:00까지 운영됩니다"
 
 === Language Rules ===
 - Detect the user's language automatically (any language).
-- ALWAYS respond in the same language.
+- ALWAYS respond in the same language in both summary and cards.
 
 === Information Rules ===
 - Use the festival information below as the primary and most accurate source of truth.
@@ -173,14 +268,22 @@ Keep answers concise and friendly.
 === Style Rules ===
 - Be friendly, concise, and helpful.
 - Offer additional helpful context when appropriate.
-- Suggest related topics the user may want to ask.
 
 Festival information (authoritative data):
 ${JSON.stringify(festival, null, 2)}
-            `,
-            },
-            { role: "user", content: message },
-          ],
+        `,
+      };
+
+      const apiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          response_format: { type: "json_object" },
+          messages: [systemMessage, ...conversationHistory],
         }),
       });
 
@@ -190,10 +293,80 @@ ${JSON.stringify(festival, null, 2)}
         return res.status(apiRes.status).json(data);
       }
 
-      const reply = data.choices?.[0]?.message?.content ?? "";
+      const replyText = data.choices?.[0]?.message?.content ?? "";
+
+      // Parse JSON response from AI
+      let parsedReply;
+      try {
+        // Remove markdown code blocks if present (```json ... ``` or ``` ... ```)
+        let cleanedText = replyText.trim();
+        const codeBlockMatch = cleanedText.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+        if (codeBlockMatch) {
+          cleanedText = codeBlockMatch[1].trim();
+        }
+
+        // Try to extract JSON object from text (in case AI adds extra text)
+        const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          cleanedText = jsonMatch[0];
+        }
+
+        console.log("Parsing AI response:", cleanedText.substring(0, 200));
+        parsedReply = JSON.parse(cleanedText);
+
+        // Validate structure
+        if (!parsedReply.summary) {
+          throw new Error("Invalid response structure: missing summary");
+        }
+
+        // Ensure cards is always an array (default to empty if missing)
+        if (!parsedReply.cards) {
+          parsedReply.cards = [];
+        }
+
+        if (!Array.isArray(parsedReply.cards)) {
+          console.warn("Cards is not an array, converting to empty array");
+          parsedReply.cards = [];
+        }
+
+        // Validate each card has type and data
+        parsedReply.cards = parsedReply.cards.map((card: any) => {
+          if (!card.type) {
+            card.type = "text"; // default type
+          }
+          if (!card.data) {
+            // Convert old format to new format if needed
+            card.data = card.content ? { content: card.content } : {};
+          }
+          return card;
+        });
+      } catch (e) {
+        console.error("❌ Failed to parse AI response as JSON:", e);
+        console.error("📝 Original AI text:", replyText);
+
+        // Try to extract summary if it's a JSON-like string
+        let extractedSummary = replyText;
+        try {
+          // If AI sent something like '{ "summary": "..." }' but parse failed
+          // try to extract the summary value
+          const summaryMatch = replyText.match(/"summary"\s*:\s*"([^"]+)"/);
+          if (summaryMatch) {
+            extractedSummary = summaryMatch[1];
+            console.log("✅ Extracted summary from malformed JSON:", extractedSummary);
+          }
+        } catch (extractError) {
+          console.error("Failed to extract summary:", extractError);
+        }
+
+        // Fallback to plain text
+        parsedReply = {
+          summary: extractedSummary || "죄송해요, 지금은 답변을 가져오지 못했어요.",
+          cards: []
+        };
+      }
 
       // ----------------------------
-      // 2) 📌 Follow-up questions 생성
+      // 2) 📌 Follow-up questions 생성 (대화 맥락 포함)
       // ----------------------------
       const followRes = await fetch(
         "https://api.openai.com/v1/chat/completions",
@@ -209,16 +382,22 @@ ${JSON.stringify(festival, null, 2)}
               {
                 role: "system",
                 content: `
-You generate 3 short follow-up questions relevant to the user's message.
+You generate 3 short follow-up questions based on the ENTIRE conversation context.
 Detect the user's language automatically (support any language) and respond ONLY in that language.
 Return ONLY a JSON array of strings.
+
+IMPORTANT: The follow-up questions should be contextually relevant to the CURRENT topic being discussed.
+For example:
+- If discussing food/restaurants, suggest questions about specific restaurants, prices, opening hours
+- If discussing parking, suggest questions about fees, capacity, specific locations
+- If discussing programs, suggest questions about times, target audience, locations
 
 Example:
 ["행사장 입장 시간은?","우천 시 대피장소는?","가족 프로그램도 있어?"]
             `.trim(),
               },
-              { role: "user", content: message },
-              { role: "assistant", content: reply },
+              ...conversationHistory,
+              { role: "assistant", content: parsedReply.summary },
             ],
           }),
         }
@@ -238,7 +417,7 @@ Example:
       // 3) 클라이언트로 전달
       // ----------------------------
       res.json({
-        reply,
+        reply: parsedReply, // { summary: string, cards: Array<{title, content}> }
         followUp, // 📌 추가됨!
       });
     } catch (err) {

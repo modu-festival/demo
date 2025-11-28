@@ -1,8 +1,16 @@
 import { useState, useEffect, useRef } from "react";
-import { X, ArrowUp, RotateCcw } from "lucide-react";
+import { X, ArrowUp, RotateCcw, ChevronDown, Copy, Check } from "lucide-react";
 
 type MessageRole = "user" | "assistant";
 type MessageType = "text" | "image" | "map";
+
+type CardType = "parking" | "program" | "food" | "goods" | "keyvalue" | "list" | "text";
+
+interface DetailCard {
+  title: string;
+  type: CardType;
+  data: any;
+}
 
 interface Message {
   id: number;
@@ -10,6 +18,7 @@ interface Message {
   type: MessageType;
   content: string;
   url?: string; // image/map 같은 경우 사용
+  cards?: DetailCard[]; // 상세 정보 카드들
 }
 
 interface ChatbotModalProps {
@@ -31,20 +40,165 @@ const ALL_SUGGESTED_PROMPTS = [
 
 const CHAT_API_URL = (import.meta as any).env?.VITE_CHAT_API_URL || "/api/chat";
 
+// 주차장 카드 컴포넌트
+function ParkingCard({ title, data }: { title: string; data: any }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white/80 backdrop-blur-sm">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50/50 transition-colors"
+      >
+        <span className="font-semibold text-sm text-gray-900">{title}</span>
+        <ChevronDown
+          className={`h-4 w-4 text-gray-600 transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      {isOpen && (
+        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/30">
+          <div className="space-y-3">
+            {data.overview && (
+              <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-700">운영 기간</span>
+                  <span className="font-medium text-gray-900">{data.overview.period}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm mt-2">
+                  <span className="text-gray-700">총 주차 가능</span>
+                  <span className="font-semibold text-blue-700">{data.overview.totalCapacity}대</span>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              {data.lots?.map((lot: any, idx: number) => (
+                <div key={idx} className="bg-white border border-gray-200 rounded-lg p-3">
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="font-semibold text-sm text-gray-900">{lot.name}</h4>
+                    <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                      {lot.type}
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-xs text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">수용:</span>
+                      <span className="font-semibold text-gray-900">{lot.capacity}대</span>
+                    </div>
+                    {lot.address && (
+                      <div className="flex items-start gap-2">
+                        <span className="font-medium">위치:</span>
+                        <span>{lot.address}</span>
+                      </div>
+                    )}
+                    {lot.notes && (
+                      <div className="flex items-start gap-2">
+                        <span className="font-medium">비고:</span>
+                        <span className="text-blue-600">{lot.notes}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 먹거리 카드 컴포넌트
+function FoodCard({ title, data }: { title: string; data: any }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white/80 backdrop-blur-sm">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50/50 transition-colors"
+      >
+        <span className="font-semibold text-sm text-gray-900">{title}</span>
+        <ChevronDown
+          className={`h-4 w-4 text-gray-600 transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      {isOpen && (
+        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/30">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {data.restaurants?.map((restaurant: any, idx: number) => (
+              <div key={idx} className="bg-white border border-gray-200 rounded-lg p-3">
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="font-semibold text-sm text-gray-900">{restaurant.name}</h4>
+                  <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded">
+                    {restaurant.type}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">위치:</span>
+                    <span>{restaurant.address}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 텍스트 카드 컴포넌트 (기본 아코디언)
+function TextCard({ title, data }: { title: string; data: any }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const content = data.content || data;
+
+  return (
+    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white/80 backdrop-blur-sm">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50/50 transition-colors"
+      >
+        <span className="font-semibold text-sm text-gray-900">{title}</span>
+        <ChevronDown
+          className={`h-4 w-4 text-gray-600 transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      {isOpen && (
+        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/30">
+          <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+            {content}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [typedText, setTypedText] = useState("");
   const [mounted, setMounted] = useState(false);
   const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>(() =>
-    ALL_SUGGESTED_PROMPTS.slice(0, 4)
+    ALL_SUGGESTED_PROMPTS.slice(0, 3)
   );
   const [isThinking, setIsThinking] = useState(false);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  const fullMessage = "안녕하세요, AI 챗봇이에요.";
+  const fullMessage = "반가워요, AI 챗봇이에요.";
 
   // 스트리밍용
   const streamingIntervalRef = useRef<number | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   // 배경 애니메이션 마운트
   useEffect(() => {
@@ -89,10 +243,25 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     };
   }, []);
 
+  // textarea 자동 높이 조절
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [input]);
+
+  // 메시지 추가 시 자동 스크롤
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
   // 추천 질문 랜덤 갱신
   const refreshSuggestedPrompts = () => {
     const shuffled = [...ALL_SUGGESTED_PROMPTS].sort(() => Math.random() - 0.5);
-    setSuggestedPrompts(shuffled.slice(0, 4));
+    setSuggestedPrompts(shuffled.slice(0, 3));
   };
 
   // AI 응답에서 이미지/지도 URL 파싱
@@ -191,27 +360,56 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
       content: "",
     };
 
-    setMessages((prev) => [...prev, userMessage, assistantPlaceholder]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages([...updatedMessages, assistantPlaceholder]);
+
+    // 대화 히스토리를 OpenAI 형식으로 변환 (텍스트만)
+    const conversationHistory = updatedMessages
+      .filter(m => m.type === "text" && m.content) // 텍스트 메시지만
+      .map(m => ({
+        role: m.role,
+        content: m.content
+      }));
 
     try {
       const res = await fetch(CHAT_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userContent }),
+        body: JSON.stringify({
+          message: userContent,
+          history: conversationHistory
+        }),
       });
 
       const data = await res.json();
 
-      const reply: string =
-        data?.reply ??
-        "죄송해요, 지금은 답변을 가져오지 못했어요. 잠시 후 다시 시도해 주세요.";
+      // 📌 구조화된 응답 파싱 (summary + cards)
+      const replyData = data?.reply ?? {
+        summary: "죄송해요, 지금은 답변을 가져오지 못했어요. 잠시 후 다시 시도해 주세요.",
+        cards: [],
+      };
+
+      const summary = replyData.summary || "";
+      const cards = replyData.cards || [];
 
       const aiFollowUps: string[] = Array.isArray(data?.followUp)
         ? data.followUp
         : [];
 
-      // 시각적 요소 파싱
-      const { mainText, extraMessages } = parseAIReply(reply);
+      // 시각적 요소 파싱 (URL 등)
+      const { mainText, extraMessages } = parseAIReply(summary);
+
+      // cards를 assistantPlaceholder에 추가
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistantId
+            ? {
+                ...m,
+                cards: cards, // 상세 카드 추가
+              }
+            : m
+        )
+      );
 
       // 스트리밍
       startStreamingText(assistantId, mainText);
@@ -254,6 +452,9 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     if (!input.trim()) return;
     const content = input.trim();
     setInput("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
     sendToAI(content);
   };
 
@@ -278,110 +479,33 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     }
     setMessages([]);
     setInput("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
     setTypedText("");
     setIsThinking(false);
     refreshSuggestedPrompts();
   };
 
+  // 메시지 복사
+  const handleCopy = async (messageId: number, content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedId(messageId);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden">
-      {/* 베이스 그라데이션 */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(180deg, #fdf2f8 0%, #f0fdfa 50%, #faf5ff 100%)",
-        }}
-      />
-
-      {/* 움직이는 블롭 1 - 핑크 */}
-      {mounted && (
-        <div
-          className="blob-1 absolute rounded-full"
-          style={{
-            width: "140%",
-            height: "50%",
-            top: "-10%",
-            left: "-20%",
-            background:
-              "radial-gradient(ellipse at center, rgba(251, 207, 232, 0.6) 0%, rgba(251, 207, 232, 0) 70%)",
-            filter: "blur(40px)",
-          }}
-        />
-      )}
-
-      {/* 움직이는 블롭 2 - 민트 */}
-      {mounted && (
-        <div
-          className="blob-2 absolute rounded-full"
-          style={{
-            width: "120%",
-            height: "45%",
-            top: "30%",
-            right: "-30%",
-            background:
-              "radial-gradient(ellipse at center, rgba(167, 243, 208, 0.5) 0%, rgba(167, 243, 208, 0) 70%)",
-            filter: "blur(50px)",
-          }}
-        />
-      )}
-
-      {/* 움직이는 블롭 3 - 라벤더 */}
-      {mounted && (
-        <div
-          className="blob-3 absolute rounded-full"
-          style={{
-            width: "130%",
-            height: "50%",
-            bottom: "-5%",
-            left: "-20%",
-            background:
-              "radial-gradient(ellipse at center, rgba(221, 214, 254, 0.6) 0%, rgba(221, 214, 254, 0) 70%)",
-            filter: "blur(45px)",
-          }}
-        />
-      )}
-
-      {/* 움직이는 블롭 4 - 스카이블루 */}
-      {mounted && (
-        <div
-          className="blob-4 absolute rounded-full"
-          style={{
-            width: "80%",
-            height: "35%",
-            top: "50%",
-            left: "10%",
-            background:
-              "radial-gradient(ellipse at center, rgba(186, 230, 253, 0.4) 0%, rgba(186, 230, 253, 0) 70%)",
-            filter: "blur(50px)",
-          }}
-        />
-      )}
-
-      {/* 미세한 반짝임 */}
-      {mounted &&
-        Array.from({ length: 8 }, (_, i) => (
-          <div
-            key={i}
-            className="shimmer absolute rounded-full"
-            style={{
-              width: 3 + (i % 3),
-              height: 3 + (i % 3),
-              left: `${15 + i * 10}%`,
-              top: `${20 + i * 8}%`,
-              background: "rgba(255, 255, 255, 0.8)",
-              boxShadow: "0 0 8px rgba(255, 255, 255, 0.6)",
-              animationDelay: `${i * 0.5}s`,
-            }}
-          />
-        ))}
-
+    <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-white">
       {/* Main Content */}
       <div className="relative z-10 flex flex-col h-full">
         {/* Header */}
-        <header className="flex items-center justify-between border-b border-gray-200/50 px-2 py-2 backdrop-blur-md">
+        <header className="flex items-center justify-between px-2 py-2 backdrop-blur-md">
           <div className="flex items-center gap-2 pl-1">
             <button
               onClick={handleReset}
@@ -393,7 +517,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
           </div>
           <button
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-gray-700 transition-colors"
             aria-label="Close chatbot"
           >
             <X className="h-6 w-6" />
@@ -403,31 +527,40 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         {/* Chat Area */}
         <div className="flex-1 overflow-y-auto p-4">
           {messages.length === 0 ? (
-            <div className="flex h-full flex-col items-start justify-start gap-8 px-2 pt-16">
+            <div className="flex h-full flex-col items-start justify-center px-2 pb-24">
+              {/* AI Image */}
+              <img
+                src="/img-ai.webp"
+                alt="AI"
+                className="w-10 h-10 object-contain float-animation"
+              />
+
               {/* Typing Effect Text */}
-              <div className="text-left space-y-1">
-                <h3 className="text-xl font-semibold text-gray-800">
-                  {typedText}
-                  {typedText.length < fullMessage.length && (
-                    <span className="inline-block w-0.5 h-4 ml-1 bg-gray-400 animate-pulse" />
-                  )}
+              <div className="text-left">
+                <h3 className="text-[20px] font-semibold text-gray-800 -tracking-[0.02em] mb-0.5">
+                  {fullMessage}
                 </h3>
-                <p className="text-sm text-gray-700">
-                  시흥갯골축제에 대해 모든 것을 물어보세요
+                <p className="text-[14px] font-medium text-gray-600 -tracking-[0.02em]">
+                  20주년 시흥갯골축제에 대해 모든 것을 물어보세요.
                 </p>
               </div>
 
               {/* Suggested Prompts */}
-              <div className="grid w-full max-w-md gap-2">
-                {suggestedPrompts.map((prompt, index) => (
+              <div className="mt-10 w-full max-w-md space-y-3">
+                <p className="text-[13px] font-semibold text-gray-700 -tracking-[0.02em]">
+                  가장 많이 묻는 질문 Top3
+                </p>
+                <div className="grid gap-2">
+                  {suggestedPrompts.map((prompt, index) => (
                   <button
                     key={index}
                     onClick={() => handlePromptClick(prompt)}
-                    className="rounded-tr-2xl rounded-br-2xl rounded-bl-2xl border border-gray-100 px-4 py-3.5 text-left text-sm text-gray-700 font-medium transition-colors bg-white/90 backdrop-blur-sm hover:bg-white/90"
+                    className="rounded-tr-2xl rounded-br-2xl rounded-bl-2xl border border-gray-100 px-4 py-3.5 text-left text-sm text-gray-800 font-medium transition-colors bg-gray-200 backdrop-blur-sm hover:bg-gray-200/90"
                   >
                     {prompt}
                   </button>
                 ))}
+                </div>
               </div>
             </div>
           ) : (
@@ -462,23 +595,65 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                   );
                 }
 
+                // assistant 메시지인데 content가 비어있으면 렌더링하지 않음
+                if (message.role === "assistant" && !message.content) {
+                  return null;
+                }
+
                 // 기본 텍스트 버블
                 return (
-                  <div
-                    key={message.id}
-                    className={`flex ${
-                      message.role === "user" ? "justify-end" : "justify-start"
-                    }`}
-                  >
+                  <div key={message.id}>
                     <div
-                      className={`max-w-[80%] rounded-2xl text-sm font-medium px-4 py-2 ${
-                        message.role === "user"
-                          ? "bg-gray-900 text-white"
-                          : "bg-gray-100 text-gray-900"
+                      className={`flex ${
+                        message.role === "user" ? "justify-end" : "justify-start"
                       }`}
                     >
-                      {message.content}
+                      <div className={`flex items-end gap-1 max-w-[90%] ${message.role === "user" ? "flex-row-reverse" : ""}`}>
+                        <div
+                          className={`rounded-2xl -tracking-[0.01em] text-[14px] font-medium px-4 py-2 ${
+                            message.role === "user"
+                              ? "bg-gray-900 text-white"
+                              : "bg-gray-200 text-gray-900"
+                          }`}
+                        >
+                          {message.content}
+                        </div>
+                        {message.role === "assistant" && message.content && (
+                          <button
+                            onClick={() => handleCopy(message.id, message.content)}
+                            className="flex-shrink-0 p-1.5 rounded-lg hover:bg-gray-200/50 transition-colors mb-1"
+                            aria-label="Copy message"
+                          >
+                            {copiedId === message.id ? (
+                              <Check className="h-3.5 w-3.5 text-green-600" />
+                            ) : (
+                              <Copy className="h-3.5 w-3.5 text-gray-500" />
+                            )}
+                          </button>
+                        )}
+                      </div>
                     </div>
+
+                    {/* 구조화된 카드 표시 (AI 응답에만) */}
+                    {message.role === "assistant" && message.cards && message.cards.length > 0 && (
+                      <div className="flex justify-start mt-2">
+                        <div className="max-w-[95%] w-full space-y-3">
+                          {message.cards.map((card, idx) => {
+                            // 타입별로 다른 컴포넌트 렌더링
+                            if (card.type === "parking") {
+                              return <ParkingCard key={idx} title={card.title} data={card.data} />;
+                            }
+
+                            if (card.type === "food") {
+                              return <FoodCard key={idx} title={card.title} data={card.data} />;
+                            }
+
+                            // 기본: 텍스트 카드 (아코디언)
+                            return <TextCard key={idx} title={card.title} data={card.data} />;
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -508,6 +683,9 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                   ))}
                 </div>
               )}
+
+              {/* 자동 스크롤용 앵커 */}
+              <div ref={chatEndRef} />
             </div>
           )}
         </div>
@@ -515,19 +693,20 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         {/* Input Area */}
         <div className="border-t border-gray-200/50 p-4 bg-white/70 backdrop-blur-md">
           <div className="mx-auto max-w-2xl">
-            <div className="relative">
-              <input
-                type="text"
+            <div className="relative flex items-end">
+              <textarea
+                ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="메시지를 입력하세요..."
-                className="w-full rounded-full border border-gray-300 py-3 pl-4 pr-14 text-sm outline-none transition-colors focus:border-gray-900"
+                placeholder="AI 챗봇에게 질문해보세요"
+                rows={1}
+                className="w-full rounded-3xl border border-gray-400 py-3 pl-4 pr-14 outline-none transition-colors focus:border-gray-400 font-medium text-[14px] -tracking-[0.02em] resize-none overflow-hidden max-h-32"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim()}
-                className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-gray-900 text-white transition-opacity disabled:opacity-50"
+                className="absolute right-1.5 bottom-1.5 flex h-9 w-9 items-center justify-center rounded-full bg-gray-900 text-white transition-opacity disabled:opacity-50"
                 aria-label="Send message"
               >
                 <ArrowUp className="h-5 w-5" />
@@ -539,34 +718,13 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
 
       {/* CSS Animations */}
       <style>{`
-        @keyframes blobMove1 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(5%, 3%) scale(1.02); }
-          66% { transform: translate(-3%, -2%) scale(0.98); }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
         }
-        @keyframes blobMove2 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(-4%, 4%) scale(0.98); }
-          66% { transform: translate(3%, -3%) scale(1.03); }
+        .float-animation {
+          animation: float 2.5s ease-in-out infinite;
         }
-        @keyframes blobMove3 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(4%, -2%) scale(1.01); }
-          66% { transform: translate(-5%, 3%) scale(0.99); }
-        }
-        @keyframes blobMove4 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(-3%, 5%) scale(1.02); }
-        }
-        @keyframes shimmer {
-          0%, 100% { opacity: 0.3; transform: scale(0.8); }
-          50% { opacity: 0.8; transform: scale(1.2); }
-        }
-        .blob-1 { animation: blobMove1 20s ease-in-out infinite; }
-        .blob-2 { animation: blobMove2 25s ease-in-out infinite; }
-        .blob-3 { animation: blobMove3 22s ease-in-out infinite; }
-        .blob-4 { animation: blobMove4 18s ease-in-out infinite; }
-        .shimmer { animation: shimmer 3s ease-in-out infinite; }
 
         @keyframes typing {
           0% { transform: translateY(0); opacity: 0.3; }
