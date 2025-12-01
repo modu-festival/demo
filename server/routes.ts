@@ -167,7 +167,7 @@ Return EXACTLY this structure with NO additional text before or after:
   "cards": [
     {
       "title": "Card title",
-      "type": "keyvalue | grid | table | calendar",
+      "type": "keyvalue | grid | table | calendar | map",
       "data": { /* structure depends on type */ }
     }
   ]
@@ -336,6 +336,43 @@ Example in English (same data, translated):
   }
 }
 
+5. type: "map" - For displaying Google Maps with a location
+IMPORTANT: Translate ALL text fields to the user's language!
+Example in Korean:
+{
+  "title": "행사장 위치",
+  "type": "map",
+  "data": {
+    "address": "경기도 시흥시 동서로 287"
+  }
+}
+
+You can also use coordinates instead of address:
+{
+  "title": "행사장 위치",
+  "type": "map",
+  "data": {
+    "lat": 37.3850,
+    "lng": 126.8050,
+    "zoom": 16
+  }
+}
+
+Example in English (location-based):
+{
+  "title": "Event Venue Location",
+  "type": "map",
+  "data": {
+    "address": "287 Dongseo-ro, Siheung-si, Gyeonggi-do"
+  }
+}
+
+WHEN TO USE MAP CARDS:
+- Use map cards when the user asks about locations, directions, or "where" questions
+- Examples: "행사장 위치가 어디예요?", "어떻게 가요?", "Where is the venue?", "How do I get there?"
+- Prefer using "address" field when available from festival data
+- Use coordinates only if you need precise positioning or address is not available
+
 IMPORTANT:
 - Return ONLY the JSON object, no markdown formatting
 - "summary" should be a quick, conversational answer (1-2 sentences max)
@@ -368,6 +405,9 @@ Choose the appropriate card type(s) based on the information structure:
   • Calendar events → type: "calendar"
     Example: program schedules with specific dates/times that users might want to add to their calendar
     Use this when users ask about specific programs, schedules, or times that they would want to remember
+  • Location/map display → type: "map"
+    Example: venue location, how to get there, parking lot locations, specific addresses
+    Use this when users ask "where" questions or need directions
 
 TIP: You can combine multiple card types for comprehensive answers!
 Example for parking question:
@@ -384,6 +424,9 @@ Examples:
 - "프로그램 뭐 있어요?" → summary + cards: [{ type: "grid" }] or [{ type: "calendar" }]
 - "소금의 기억 공연 언제 해?" → summary + cards: [{ type: "calendar" }]
 - "9월 26일 프로그램 알려줘" → summary + cards: [{ type: "calendar" }] or [{ type: "table" }, { type: "calendar" }]
+- "행사장 위치가 어디예요?" → summary + cards: [{ type: "map" }]
+- "어떻게 가요?" → summary + cards: [{ type: "map" }]
+- "주차장 어디에 있어요?" → summary + cards: [{ type: "map" }] or [{ type: "keyvalue" }, { type: "map" }]
 
 ❌ NO CARDS (summary only):
 - "주차 요금이 얼마예요?" → "무료입니다"

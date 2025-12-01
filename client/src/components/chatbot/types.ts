@@ -2,7 +2,7 @@ export type MessageRole = "user" | "assistant";
 export type MessageType = "text" | "image" | "map";
 
 // 데이터 구조 기반 카드 타입
-export type CardType = "keyvalue" | "grid" | "table" | "calendar";
+export type CardType = "keyvalue" | "grid" | "table" | "calendar" | "map";
 
 // Key-Value 카드 데이터
 export interface KeyValueData {
@@ -44,11 +44,19 @@ export interface CalendarData {
   }[];
 }
 
+// Map 카드 데이터
+export interface MapData {
+  address?: string; // 주소 기반 검색
+  lat?: number; // 위도
+  lng?: number; // 경도
+  zoom?: number; // 줌 레벨 (기본: 15)
+}
+
 // 카드 인터페이스
 export interface DetailCard {
   title: string;
   type: CardType;
-  data: KeyValueData | GridData | TableData | CalendarData | any;
+  data: KeyValueData | GridData | TableData | CalendarData | MapData | any;
 }
 
 // 메시지 인터페이스

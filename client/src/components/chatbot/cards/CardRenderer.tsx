@@ -3,6 +3,7 @@ import KeyValueCard from "./KeyValueCard";
 import GridCard from "./GridCard";
 import TableCard from "./TableCard";
 import CalendarCard from "./CalendarCard";
+import MapCard from "./MapCard";
 
 interface CardRendererProps {
   cards: DetailCard[];
@@ -25,6 +26,9 @@ export default function CardRenderer({ cards }: CardRendererProps) {
 
             case "calendar":
               return <CalendarCard key={idx} title={card.title} data={card.data} />;
+
+            case "map":
+              return <MapCard key={idx} title={card.title} data={card.data} />;
 
             default:
               console.warn(`Unknown card type: ${card.type}`);

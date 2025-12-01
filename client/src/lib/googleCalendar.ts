@@ -6,19 +6,33 @@ export interface CalendarEvent {
   title: string;
   description?: string;
   location?: string;
-  startDate: string; // ISO 8601 형식 (YYYY-MM-DDTHH:mm:ss) 또는 YYYYMMDDTHHMMSS
+  startDate: string; // ISO 8601 형식 (YYYY-MM-DDTHH:mm:ss) 또는 YYYYMMDD (종일 이벤트)
   endDate: string;
+  isAllDay?: boolean; // 종일 이벤트 여부
 }
 
 /**
  * 날짜를 Google Calendar URL 형식으로 변환
  * ISO 8601 형식 (YYYY-MM-DDTHH:mm:ss)을 YYYYMMDDTHHMMSS 형식으로 변환
+ * 종일 이벤트는 YYYYMMDD 형식으로 변환
  * 타임존 정보 없이 로컬 시간으로 처리
  */
-function formatDateForGoogleCalendar(dateStr: string): string {
+function formatDateForGoogleCalendar(dateStr: string, isAllDay: boolean = false): string {
   // 이미 YYYYMMDDTHHMMSS 형식이면 그대로 사용
   if (/^\d{8}T\d{6}$/.test(dateStr)) {
     return dateStr;
+  }
+
+  // 이미 YYYYMMDD 형식이면 그대로 사용 (종일 이벤트)
+  if (/^\d{8}$/.test(dateStr)) {
+    return dateStr;
+  }
+
+  // 종일 이벤트는 날짜만 사용
+  if (isAllDay) {
+    const [datePart] = dateStr.split('T');
+    const [year, month, day] = datePart.split('-');
+    return `${year}${month}${day}`;
   }
 
   // ISO 8601 형식 변환 (YYYY-MM-DDTHH:mm:ss 형태)
