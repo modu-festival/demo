@@ -1,25 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { X, ArrowUp, RotateCcw, ChevronDown, Copy, Check } from "lucide-react";
-
-type MessageRole = "user" | "assistant";
-type MessageType = "text" | "image" | "map";
-
-type CardType = "parking" | "program" | "food" | "goods" | "keyvalue" | "list" | "text";
-
-interface DetailCard {
-  title: string;
-  type: CardType;
-  data: any;
-}
-
-interface Message {
-  id: number;
-  role: MessageRole;
-  type: MessageType;
-  content: string;
-  url?: string; // image/map 같은 경우 사용
-  cards?: DetailCard[]; // 상세 정보 카드들
-}
+import { X, ArrowUp, RotateCcw, Copy, Check } from "lucide-react";
+import { Message } from "./chatbot/types";
+import CardRenderer from "./chatbot/cards/CardRenderer";
 
 interface ChatbotModalProps {
   isOpen: boolean;
@@ -39,148 +21,6 @@ const ALL_SUGGESTED_PROMPTS = [
 ];
 
 const CHAT_API_URL = (import.meta as any).env?.VITE_CHAT_API_URL || "/api/chat";
-
-// 주차장 카드 컴포넌트
-function ParkingCard({ title, data }: { title: string; data: any }) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white/80 backdrop-blur-sm">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50/50 transition-colors"
-      >
-        <span className="font-semibold text-sm text-gray-900">{title}</span>
-        <ChevronDown
-          className={`h-4 w-4 text-gray-600 transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-      {isOpen && (
-        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/30">
-          <div className="space-y-3">
-            {data.overview && (
-              <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-700">운영 기간</span>
-                  <span className="font-medium text-gray-900">{data.overview.period}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm mt-2">
-                  <span className="text-gray-700">총 주차 가능</span>
-                  <span className="font-semibold text-blue-700">{data.overview.totalCapacity}대</span>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              {data.lots?.map((lot: any, idx: number) => (
-                <div key={idx} className="bg-white border border-gray-200 rounded-lg p-3">
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-semibold text-sm text-gray-900">{lot.name}</h4>
-                    <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
-                      {lot.type}
-                    </span>
-                  </div>
-                  <div className="space-y-1 text-xs text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">수용:</span>
-                      <span className="font-semibold text-gray-900">{lot.capacity}대</span>
-                    </div>
-                    {lot.address && (
-                      <div className="flex items-start gap-2">
-                        <span className="font-medium">위치:</span>
-                        <span>{lot.address}</span>
-                      </div>
-                    )}
-                    {lot.notes && (
-                      <div className="flex items-start gap-2">
-                        <span className="font-medium">비고:</span>
-                        <span className="text-blue-600">{lot.notes}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// 먹거리 카드 컴포넌트
-function FoodCard({ title, data }: { title: string; data: any }) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white/80 backdrop-blur-sm">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50/50 transition-colors"
-      >
-        <span className="font-semibold text-sm text-gray-900">{title}</span>
-        <ChevronDown
-          className={`h-4 w-4 text-gray-600 transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-      {isOpen && (
-        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/30">
-          <div className="grid gap-3 sm:grid-cols-2">
-            {data.restaurants?.map((restaurant: any, idx: number) => (
-              <div key={idx} className="bg-white border border-gray-200 rounded-lg p-3">
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-semibold text-sm text-gray-900">{restaurant.name}</h4>
-                  <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded">
-                    {restaurant.type}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">위치:</span>
-                    <span>{restaurant.address}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// 텍스트 카드 컴포넌트 (기본 아코디언)
-function TextCard({ title, data }: { title: string; data: any }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const content = data.content || data;
-
-  return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white/80 backdrop-blur-sm">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50/50 transition-colors"
-      >
-        <span className="font-semibold text-sm text-gray-900">{title}</span>
-        <ChevronDown
-          className={`h-4 w-4 text-gray-600 transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-      {isOpen && (
-        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/30">
-          <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
-            {content}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -646,23 +486,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
 
                     {/* 구조화된 카드 표시 (AI 응답에만) */}
                     {message.role === "assistant" && message.cards && message.cards.length > 0 && (
-                      <div className="flex justify-start mt-2">
-                        <div className="max-w-[95%] w-full space-y-3">
-                          {message.cards.map((card, idx) => {
-                            // 타입별로 다른 컴포넌트 렌더링
-                            if (card.type === "parking") {
-                              return <ParkingCard key={idx} title={card.title} data={card.data} />;
-                            }
-
-                            if (card.type === "food") {
-                              return <FoodCard key={idx} title={card.title} data={card.data} />;
-                            }
-
-                            // 기본: 텍스트 카드 (아코디언)
-                            return <TextCard key={idx} title={card.title} data={card.data} />;
-                          })}
-                        </div>
-                      </div>
+                      <CardRenderer cards={message.cards} />
                     )}
                   </div>
                 );
@@ -682,7 +506,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
               {/* 후속 추천 질문 (대화 중에도 표시) */}
               {!isThinking && suggestedPrompts.length > 0 && (
                 <div className="pt-2 w-full space-y-3">
-                  <div className="flex items-center gap-2 ml-1">
+                  <div className="flex items-center gap-1.5 ml-1">
                     <img
                       src="/img-ai.webp"
                       alt="AI"

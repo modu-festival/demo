@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, MapPin, ArrowDownToLine } from "lucide-react";
+import { Download, MapPin, ArrowDownToLine, Calendar } from "lucide-react";
+import { createGoogleCalendarUrl, createEventFromProgram } from "@/lib/googleCalendar";
 
 interface ProgramSectionProps {
   lang: Language;
@@ -196,15 +197,34 @@ export function ProgramSection({
                                 {scheduleItem.sessions.map((session) => (
                                   <div
                                     key={session.sessionNumber}
-                                    className="flex items-center gap-2 text-sm"
+                                    className="flex items-center justify-between gap-2 text-sm"
                                   >
-                                    <Badge className="bg-gray-600 rounded-[3px] text-white text-[11px] px-2 py-0.5">
-                                      {session.sessionNumber}
-                                      {getTranslation(lang, "session")}
-                                    </Badge>
-                                    <span className="font-medium text-gray-700">
-                                      {session.time}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <Badge className="bg-gray-600 rounded-[3px] text-white text-[11px] px-2 py-0.5">
+                                        {session.sessionNumber}
+                                        {getTranslation(lang, "session")}
+                                      </Badge>
+                                      <span className="font-medium text-gray-700">
+                                        {session.time}
+                                      </span>
+                                    </div>
+                                    <button
+                                      onClick={() => {
+                                        const calendarEvent = createEventFromProgram(
+                                          performance.name[lang],
+                                          scheduleItem.date,
+                                          session.time,
+                                          performance.location[lang],
+                                          performance.description?.[lang]
+                                        );
+                                        const url = createGoogleCalendarUrl(calendarEvent);
+                                        window.open(url, '_blank', 'noopener,noreferrer');
+                                      }}
+                                      className="flex-shrink-0 flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                                    >
+                                      <Calendar className="h-3 w-3" />
+                                      <span>{getTranslation(lang, "addToCalendar") || "캘린더 추가"}</span>
+                                    </button>
                                   </div>
                                 ))}
                               </div>

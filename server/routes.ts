@@ -167,7 +167,7 @@ Return EXACTLY this structure with NO additional text before or after:
   "cards": [
     {
       "title": "Card title",
-      "type": "parking | program | food | goods | keyvalue | list | text",
+      "type": "keyvalue | grid | table | calendar",
       "data": { /* structure depends on type */ }
     }
   ]
@@ -175,24 +175,139 @@ Return EXACTLY this structure with NO additional text before or after:
 
 CARD TYPES AND STRUCTURES:
 
-1. type: "parking" - For parking information
+1. type: "keyvalue" - For displaying key-value pairs (summary info, overview, stats)
 IMPORTANT: Translate ALL text fields to the user's language!
 Example in Korean:
 {
-  "title": "주차장 정보",
-  "type": "parking",
+  "title": "주차 정보 요약",
+  "type": "keyvalue",
   "data": {
-    "overview": {
-      "period": "2024.10.11~10.13",
-      "totalCapacity": 2297
-    },
-    "lots": [
+    "items": [
+      { "key": "운영 기간", "value": "2024.10.11~10.13" },
+      { "key": "총 주차 가능", "value": "2,297대", "highlight": true },
+      { "key": "운영 시간", "value": "09:00~22:00" },
+      { "key": "주차 요금", "value": "무료" }
+    ]
+  }
+}
+
+Example in English (same data, translated):
+{
+  "title": "Parking Overview",
+  "type": "keyvalue",
+  "data": {
+    "items": [
+      { "key": "Operation Period", "value": "Oct 11-13, 2024" },
+      { "key": "Total Capacity", "value": "2,297 spaces", "highlight": true },
+      { "key": "Operating Hours", "value": "9:00 AM - 10:00 PM" },
+      { "key": "Parking Fee", "value": "Free" }
+    ]
+  }
+}
+
+2. type: "grid" - For displaying cards in a grid (restaurants, parking lots, facilities)
+IMPORTANT: Translate ALL text fields to the user's language!
+Example in Korean (parking lots):
+{
+  "title": "주차장 목록",
+  "type": "grid",
+  "data": {
+    "columns": 2,
+    "items": [
       {
-        "name": "시흥시청 주차장",
-        "type": "공영",
-        "capacity": 500,
-        "address": "경기도 시흥시...",
-        "notes": "무료 운영"
+        "title": "시흥시청 주차장",
+        "subtitle": "경기도 시흥시 시청로 20",
+        "badge": "무료",
+        "fields": [
+          { "key": "수용", "value": "500대" },
+          { "key": "거리", "value": "도보 5분" },
+          { "key": "비고", "value": "24시간 운영" }
+        ]
+      },
+      {
+        "title": "갯골생태공원 주차장",
+        "subtitle": "경기도 시흥시 동서로 287",
+        "badge": "무료",
+        "fields": [
+          { "key": "수용", "value": "300대" },
+          { "key": "거리", "value": "행사장 인접" }
+        ]
+      }
+    ]
+  }
+}
+
+Example in English (restaurants):
+{
+  "title": "Nearby Restaurants",
+  "type": "grid",
+  "data": {
+    "columns": 2,
+    "items": [
+      {
+        "title": "Gaetgol Restaurant",
+        "subtitle": "Near festival entrance",
+        "badge": "Korean Food",
+        "fields": [
+          { "key": "Specialty", "value": "Seafood" },
+          { "key": "Distance", "value": "5 min walk" }
+        ]
+      }
+    ]
+  }
+}
+
+3. type: "table" - For displaying data in table format (schedules, pricing, comparisons)
+IMPORTANT: Translate ALL text fields to the user's language!
+Example in Korean (program schedule):
+{
+  "title": "프로그램 시간표",
+  "type": "table",
+  "data": {
+    "headers": ["시간", "금요일", "토요일", "일요일"],
+    "rows": [
+      ["09:00~12:00", "체험부스 운영", "체험부스 운영", "체험부스 운영"],
+      ["14:00~16:00", "버스킹 공연", "버스킹 공연", "버스킹 공연"],
+      ["19:00~20:00", "개막식", "메인 무대 공연", "폐막 공연"],
+      ["20:30~21:00", "불꽃놀이", "불꽃놀이", "불꽃놀이"]
+    ]
+  }
+}
+
+Example in English (pricing table):
+{
+  "title": "Admission Fees",
+  "type": "table",
+  "data": {
+    "headers": ["Category", "General", "Student", "Senior"],
+    "rows": [
+      ["Admission", "5,000 KRW", "3,000 KRW", "Free"],
+      ["Parking", "Free", "Free", "Free"],
+      ["Guided Tour", "10,000 KRW", "7,000 KRW", "5,000 KRW"]
+    ]
+  }
+}
+
+4. type: "calendar" - For adding events to Google Calendar
+IMPORTANT: Translate ALL text fields to the user's language!
+Example in Korean:
+{
+  "title": "캘린더에 일정 추가",
+  "type": "calendar",
+  "data": {
+    "events": [
+      {
+        "title": "소금의 기억, 물의 춤",
+        "date": "2025-09-26",
+        "time": "21:00~21:20",
+        "location": "시흥갯골생태공원",
+        "description": "퓨전 국악 공연"
+      },
+      {
+        "title": "갯골 버스킹",
+        "date": "2025-09-27",
+        "time": "10:00~13:00",
+        "location": "시흥갯골생태공원"
       }
     ]
   }
@@ -200,74 +315,24 @@ Example in Korean:
 
 Example in English (same data, translated):
 {
-  "title": "Parking Information",
-  "type": "parking",
+  "title": "Add to Calendar",
+  "type": "calendar",
   "data": {
-    "overview": {
-      "period": "October 11-13, 2024",
-      "totalCapacity": 2297
-    },
-    "lots": [
+    "events": [
       {
-        "name": "Siheung City Hall Parking Lot",
-        "type": "Public",
-        "capacity": 500,
-        "address": "Siheung-si, Gyeonggi-do...",
-        "notes": "Free parking"
+        "title": "Memory of Salt, Dance of Water",
+        "date": "2025-09-26",
+        "time": "21:00~21:20",
+        "location": "Siheung Gaetgol Ecological Park",
+        "description": "Fusion Korean Music Performance"
+      },
+      {
+        "title": "Gaetgol Busking",
+        "date": "2025-09-27",
+        "time": "10:00~13:00",
+        "location": "Siheung Gaetgol Ecological Park"
       }
     ]
-  }
-}
-
-2. type: "food" - For restaurant/food information
-IMPORTANT: Translate ALL text fields to the user's language!
-Example in Korean:
-{
-  "title": "먹거리 정보",
-  "type": "food",
-  "data": {
-    "restaurants": [
-      {
-        "name": "갯골식당",
-        "type": "한식",
-        "address": "축제장 인근"
-      }
-    ]
-  }
-}
-
-Example in English (same data, translated):
-{
-  "title": "Food & Restaurants",
-  "type": "food",
-  "data": {
-    "restaurants": [
-      {
-        "name": "Gaetgol Restaurant",
-        "type": "Korean Food",
-        "address": "Near festival venue"
-      }
-    ]
-  }
-}
-
-3. type: "text" - For general text content (fallback)
-IMPORTANT: Translate ALL text fields to the user's language!
-Example in Korean:
-{
-  "title": "프로그램 안내",
-  "type": "text",
-  "data": {
-    "content": "10월 11일(금)\n• 개막식: 19:00\n• 불꽃놀이: 20:30"
-  }
-}
-
-Example in English (same data, translated):
-{
-  "title": "Program Guide",
-  "type": "text",
-  "data": {
-    "content": "Friday, October 11\n• Opening Ceremony: 7:00 PM\n• Fireworks: 8:30 PM"
   }
 }
 
@@ -293,18 +358,32 @@ Question Scope Analysis:
 - BROAD questions (전체 정보, 목록, 상세 안내) → USE CARDS
 - SPECIFIC questions (특정 항목, 단순 사실) → NO CARDS, just summary
 
-Choose the appropriate card type based on the question content:
-  • Parking questions asking for FULL INFO → type: "parking"
-  • Food/restaurant questions asking for FULL INFO → type: "food"
-  • Program/schedule questions asking for FULL INFO → type: "program" (not implemented yet, use "text" as fallback)
-  • Goods/merchandise questions asking for FULL INFO → type: "goods" (not implemented yet, use "text" as fallback)
-  • General detailed info → type: "text"
+Choose the appropriate card type(s) based on the information structure:
+  • Summary info with key-value pairs → type: "keyvalue"
+    Example: parking overview, event stats, operating hours summary
+  • Multiple items with detailed fields → type: "grid"
+    Example: parking lot details, restaurant list, program locations, program list
+  • Tabular data with rows and columns → type: "table"
+    Example: program schedules, pricing tables, time comparisons
+  • Calendar events → type: "calendar"
+    Example: program schedules with specific dates/times that users might want to add to their calendar
+    Use this when users ask about specific programs, schedules, or times that they would want to remember
+
+TIP: You can combine multiple card types for comprehensive answers!
+Example for parking question:
+  cards: [
+    { type: "keyvalue", title: "주차 정보 요약", data: { items: [...] } },
+    { type: "grid", title: "주차장 목록", data: { items: [...] } }
+  ]
 
 Examples:
 ✅ USE CARDS:
-- "주차장이 있나요?" / "주차장 정보 알려줘" → summary + cards: [{ type: "parking" }]
-- "먹을 거 뭐 있어요?" / "음식점 알려줘" → summary + cards: [{ type: "food" }]
-- "프로그램 뭐 있어요?" → summary + cards: [{ type: "text" }]
+- "주차장이 있나요?" → summary + cards: [{ type: "keyvalue" }, { type: "grid" }]
+- "먹을 거 뭐 있어요?" → summary + cards: [{ type: "grid" }]
+- "프로그램 시간표 알려줘" → summary + cards: [{ type: "table" }, { type: "calendar" }]
+- "프로그램 뭐 있어요?" → summary + cards: [{ type: "grid" }] or [{ type: "calendar" }]
+- "소금의 기억 공연 언제 해?" → summary + cards: [{ type: "calendar" }]
+- "9월 26일 프로그램 알려줘" → summary + cards: [{ type: "calendar" }] or [{ type: "table" }, { type: "calendar" }]
 
 ❌ NO CARDS (summary only):
 - "주차 요금이 얼마예요?" → "무료입니다"
@@ -407,14 +486,15 @@ ${JSON.stringify(festival, null, 2)}
         // Validate each card has type and data
         parsedReply.cards = parsedReply.cards.map((card: any) => {
           if (!card.type) {
-            card.type = "text"; // default type
+            console.warn("Card missing type, skipping:", card);
+            return null;
           }
           if (!card.data) {
             // Convert old format to new format if needed
             card.data = card.content ? { content: card.content } : {};
           }
           return card;
-        });
+        }).filter(Boolean);
       } catch (e) {
         console.error("❌ Failed to parse AI response as JSON:", e);
         console.error("📝 Original AI text:", replyText);
