@@ -96,16 +96,16 @@ const TimeSlots = ({ slots }: TimeHeaderProps) => (
 // 프로그램별 색상 선택 (프로그램 id 기반)
 const getProgramColor = (programId: string): { bg: string; hover: string } => {
   const colors = [
-    { bg: "bg-[blue-500/90]", hover: "hover:bg-blue-600/90" },
-    { bg: "bg-[#4CBF20]", hover: "hover:bg-green-600/90" },
-    { bg: "bg-purple-500/90", hover: "hover:bg-purple-600/90" },
-    { bg: "bg-[#FFB45F]", hover: "hover:bg-orange-600/90" },
-    { bg: "bg-pink-500/90", hover: "hover:bg-pink-600/90" },
-    { bg: "bg-indigo-500/90", hover: "hover:bg-indigo-600/90" },
-    { bg: "bg-teal-500/90", hover: "hover:bg-teal-600/90" },
-    { bg: "bg-[#FFAAC6]", hover: "hover:bg-red-600/90" },
-    { bg: "bg-[#C5C5C5]", hover: "hover:bg-emerald-600/90" },
-    { bg: "bg-[#6EBDF0]", hover: "hover:bg-cyan-600/90" },
+    { bg: "bg-[#C3DAFF]", hover: "hover:bg-blue-600/90" },
+    { bg: "bg-[#FFDBE4]", hover: "hover:bg-green-600/90" },
+    { bg: "bg-[#FFE5CC]", hover: "hover:bg-purple-600/90" },
+    { bg: "bg-[#EADAC8]", hover: "hover:bg-orange-600/90" },
+    { bg: "bg-[#FFFACC]", hover: "hover:bg-pink-600/90" },
+    { bg: "bg-[#D9F3C3]", hover: "hover:bg-indigo-600/90" },
+    { bg: "bg-[#DCDFFF]", hover: "hover:bg-teal-600/90" },
+    { bg: "bg-[#F5DCFF]", hover: "hover:bg-red-600/90" },
+    { bg: "bg-[#E2E2E2]", hover: "hover:bg-emerald-600/90" },
+    { bg: "bg-[#D7F5E8]", hover: "hover:bg-cyan-600/90" },
   ];
 
   // 프로그램 id를 해시하여 색상 인덱스 선택
@@ -168,11 +168,11 @@ const ProgramBody = ({ program, tableStartTime, interval, totalSlots }: ProgramB
                 height: `${heightPx}px`,
               }}
             >
-              <div className="text-[12px] font-bold leading-tight text-white [word-break:keep-all]">
+              <div className="text-[12px] font-bold leading-tight text-gray-800 [word-break:keep-all]">
                 {session.startTime} - {session.endTime}
               </div>
               {session.note && (
-                <div className="text-[10px] font-semibold mt-1 leading-tight [word-break:keep-all]">
+                <div className="text-[10px] font-semibold mt-1 leading-tight text-gray-700 [word-break:keep-all]">
                   {session.note}
                 </div>
               )}
