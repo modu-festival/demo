@@ -33,6 +33,8 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
   const [promptLabel, setPromptLabel] = useState("AI 추천 질문");
   const [isThinking, setIsThinking] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [showCardsForMessage, setShowCardsForMessage] = useState<Set<number>>(new Set());
+  const [showPrompts, setShowPrompts] = useState(true); // 초기값 true로 변경
 
   const fullMessage = "반가워요, AI 챗봇이에요.";
 
@@ -46,10 +48,16 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     setMounted(true);
   }, []);
 
-  // 모달 열릴 때 body 스크롤 방지
+  // 모달 열릴 때 body 스크롤 방지 + 맨 아래로 스크롤
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      // 모달 열릴 때 맨 아래로 스크롤
+      setTimeout(() => {
+        if (chatEndRef.current) {
+          chatEndRef.current.scrollIntoView({ behavior: 'auto' });
+        }
+      }, 0);
     } else {
       document.body.style.overflow = '';
     }
@@ -98,6 +106,24 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  // 카드 표시 시 자동 스크롤
+  useEffect(() => {
+    if (chatEndRef.current && showCardsForMessage.size > 0) {
+      setTimeout(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100); // 페이드인 애니메이션 시작 후 스크롤
+    }
+  }, [showCardsForMessage]);
+
+  // 추천질문 표시 시 자동 스크롤
+  useEffect(() => {
+    if (chatEndRef.current && showPrompts) {
+      setTimeout(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100); // 페이드인 애니메이션 시작 후 스크롤
+    }
+  }, [showPrompts]);
 
   // 추천 질문 랜덤 갱신
   const refreshSuggestedPrompts = () => {
@@ -149,6 +175,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
   // 한 글자씩 타닥타닥 스트리밍
   const startStreamingText = (messageId: number, fullText: string) => {
     setIsThinking(false); // 응답 시작하면 thinking bubble은 숨기고
+    setShowPrompts(false); // 추천질문 숨기기
     let index = 0;
 
     if (streamingIntervalRef.current !== null) {
@@ -175,6 +202,17 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
           window.clearInterval(streamingIntervalRef.current);
           streamingIntervalRef.current = null;
         }
+
+        // 타이핑 완료 후 순차적으로 카드와 추천질문 표시
+        // 방법 2: 0.3초 후 카드 표시
+        setTimeout(() => {
+          setShowCardsForMessage((prev) => new Set(prev).add(messageId));
+        }, 300);
+
+        // 방법 5: 1초 후 추천질문 표시
+        setTimeout(() => {
+          setShowPrompts(true);
+        }, 1000);
       }
     }, 20); // 속도 조절 가능
   };
@@ -264,10 +302,14 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
       // ----------------------------------------
       // 📌 후속 질문이 있으면 → 우선 적용
       // ----------------------------------------
+      console.log("🔍 Follow-up data:", { aiFollowUps, aiFollowUpLabel, fullData: data });
+
       if (aiFollowUps.length > 0) {
+        console.log("✅ Setting follow-up prompts:", aiFollowUps);
         setSuggestedPrompts(aiFollowUps);
         setPromptLabel(aiFollowUpLabel);
       } else {
+        console.log("❌ No follow-ups, using default prompts");
         refreshSuggestedPrompts(); // 기존 fallback
       }
     } catch (error) {
@@ -332,6 +374,8 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     }
     setTypedText("");
     setIsThinking(false);
+    setShowCardsForMessage(new Set());
+    setShowPrompts(false);
     refreshSuggestedPrompts();
   };
 
@@ -485,8 +529,10 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                     </div>
 
                     {/* 구조화된 카드 표시 (AI 응답에만) */}
-                    {message.role === "assistant" && message.cards && message.cards.length > 0 && (
-                      <CardRenderer cards={message.cards} />
+                    {message.role === "assistant" && message.cards && message.cards.length > 0 && showCardsForMessage.has(message.id) && (
+                      <div className="fade-in">
+                        <CardRenderer cards={message.cards} />
+                      </div>
                     )}
                   </div>
                 );
@@ -504,8 +550,8 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
               )}
 
               {/* 후속 추천 질문 (대화 중에도 표시) */}
-              {!isThinking && suggestedPrompts.length > 0 && (
-                <div className="pt-2 w-full space-y-3">
+              {!isThinking && showPrompts && suggestedPrompts.length > 0 && (
+                <div className="pt-2 w-full space-y-3 fade-in">
                   <div className="flex items-center gap-1.5 ml-1">
                     <img
                       src="/img-ai.webp"
@@ -586,6 +632,20 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         }
         .typing-dot:nth-child(2) { animation-delay: 0.15s; }
         .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .fade-in {
+          animation: fadeIn 0.4s ease-out forwards;
+        }
       `}</style>
     </div>
   );

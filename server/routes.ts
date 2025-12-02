@@ -167,7 +167,7 @@ Return EXACTLY this structure with NO additional text before or after:
   "cards": [
     {
       "title": "Card title",
-      "type": "keyvalue | grid | table | calendar | map",
+      "type": "keyvalue | grid | table | calendar | map | timetable",
       "data": { /* structure depends on type */ }
     }
   ]
@@ -373,6 +373,123 @@ WHEN TO USE MAP CARDS:
 - Prefer using "address" field when available from festival data
 - Use coordinates only if you need precise positioning or address is not available
 
+6. type: "timetable" - For displaying visual program schedules (like a Gantt chart)
+IMPORTANT: Translate ALL text fields to the user's language!
+
+CRITICAL TIMETABLE TIME RANGE:
+When creating a timetable, determine the time range as follows:
+1. FIRST PRIORITY: Use festival.operatingHours if available
+   - startTime: festival.operatingHours.startTime
+   - endTime: festival.operatingHours.endTime
+2. FALLBACK: If operatingHours is NOT available, analyze all programs for the requested date
+   - Find the earliest program start time
+   - Find the latest program end time
+   - Use these as startTime and endTime
+3. Extend the range slightly if needed (e.g., add 30 minutes padding)
+
+Example in Korean (specific date):
+{
+  "title": "9월 26일 (금) 타임테이블",
+  "type": "timetable",
+  "data": {
+    "timeConfig": {
+      "startTime": "07:00",
+      "endTime": "21:30",
+      "interval": 60
+    },
+    "programs": [
+      {
+        "id": "busking",
+        "name": "갯골 버스킹",
+        "sessions": [
+          { "date": "2025-09-26", "startTime": "10:00", "endTime": "13:00" }
+        ]
+      },
+      {
+        "id": "pool",
+        "name": "SEA POOL 파티",
+        "sessions": [
+          { "date": "2025-09-26", "startTime": "10:30", "endTime": "15:30", "note": "기상 상황에 따라 변동" }
+        ]
+      }
+    ]
+  }
+}
+
+Example in English (specific date):
+{
+  "title": "September 26 (Fri) Timetable",
+  "type": "timetable",
+  "data": {
+    "timeConfig": {
+      "startTime": "07:00",
+      "endTime": "21:30",
+      "interval": 60
+    },
+    "programs": [
+      {
+        "id": "busking",
+        "name": "Gaetgol Busking",
+        "sessions": [
+          { "date": "2025-09-26", "startTime": "10:00", "endTime": "13:00" },
+          { "date": "2025-09-26", "startTime": "14:00", "endTime": "17:00" }
+        ]
+      }
+    ]
+  }
+}
+
+WHEN TO USE TIMETABLE CARDS:
+- Use timetable cards when the user asks for visual schedules, program overview, or "what time" questions
+- Examples: "프로그램 시간표 보여줘", "타임테이블 알려줘", "Show me the schedule", "What programs are running when?"
+- Perfect for showing multiple programs and their time slots at a glance
+- Each program gets its own column, and sessions are displayed as visual blocks
+- interval should match the program granularity (60 for hourly, 30 for half-hourly)
+
+CRITICAL TIMETABLE WORKFLOW (Multi-day festivals):
+When the user asks for "타임테이블", "시간표", "스케줄", "timetable", "schedule" WITHOUT specifying a specific date:
+
+STEP 1: ALWAYS ask which date they want first. DO NOT provide timetable immediately.
+Return EXACTLY this structure (adjust dates to match the festival):
+{
+  "summary": "축제는 9월 26일부터 28일까지 3일간 진행돼요. 어느 날짜 타임테이블을 보여드릴까요?",
+  "cards": []
+}
+
+And in the followUp generation request, suggest date selection options:
+- followUp: ["9월 26일 (금)", "9월 27일 (토)", "9월 28일 (일)", "전체 일정 간단히"]
+- followUpLabel: "날짜를 선택해주세요"
+
+CRITICAL: If user asks "프로그램 시간표 알려줘", "타임테이블 보여줘", etc., you MUST ask for date selection FIRST.
+
+STEP 2: When user selects a specific date, filter programs for that date only
+{
+  "summary": "9월 27일 토요일 프로그램 타임테이블입니다!",
+  "cards": [
+    {
+      "type": "timetable",
+      "title": "9월 27일 (토) 타임테이블",
+      "data": {
+        "timeConfig": { "startTime": "07:00", "endTime": "21:30", "interval": 60 },
+        "programs": [
+          {
+            "id": "busking",
+            "name": "갯골 버스킹",
+            "sessions": [
+              { "date": "2025-09-27", "startTime": "10:00", "endTime": "13:00" },
+              { "date": "2025-09-27", "startTime": "14:00", "endTime": "17:00" }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
+
+IMPORTANT: Only include sessions that match the requested date. Filter out sessions from other dates.
+
+If user asks for "전체 일정 간단히", use type: "table" or type: "calendar" instead of timetable.
+
 IMPORTANT:
 - Return ONLY the JSON object, no markdown formatting
 - "summary" should be a quick, conversational answer (1-2 sentences max)
@@ -408,6 +525,10 @@ Choose the appropriate card type(s) based on the information structure:
   • Location/map display → type: "map"
     Example: venue location, how to get there, parking lot locations, specific addresses
     Use this when users ask "where" questions or need directions
+  • Visual schedule/timetable → type: "timetable"
+    Example: program schedules shown as a visual timeline, daily program overview, "what's running when" questions
+    Use this when users want to see multiple programs and their time slots visually
+    Better than "table" for showing program schedules because it's more visual and intuitive
 
 TIP: You can combine multiple card types for comprehensive answers!
 Example for parking question:
@@ -420,10 +541,11 @@ Examples:
 ✅ USE CARDS:
 - "주차장이 있나요?" → summary + cards: [{ type: "keyvalue" }, { type: "grid" }]
 - "먹을 거 뭐 있어요?" → summary + cards: [{ type: "grid" }]
-- "프로그램 시간표 알려줘" → summary + cards: [{ type: "table" }, { type: "calendar" }]
-- "프로그램 뭐 있어요?" → summary + cards: [{ type: "grid" }] or [{ type: "calendar" }]
+- "프로그램 시간표 알려줘" → summary + cards: [{ type: "timetable" }]
+- "타임테이블 보여줘" → summary + cards: [{ type: "timetable" }]
+- "프로그램 뭐 있어요?" → summary + cards: [{ type: "grid" }] or [{ type: "timetable" }]
 - "소금의 기억 공연 언제 해?" → summary + cards: [{ type: "calendar" }]
-- "9월 26일 프로그램 알려줘" → summary + cards: [{ type: "calendar" }] or [{ type: "table" }, { type: "calendar" }]
+- "9월 26일 프로그램 알려줘" → summary + cards: [{ type: "timetable" }] or [{ type: "calendar" }]
 - "행사장 위치가 어디예요?" → summary + cards: [{ type: "map" }]
 - "어떻게 가요?" → summary + cards: [{ type: "map" }]
 - "주차장 어디에 있어요?" → summary + cards: [{ type: "map" }] or [{ type: "keyvalue" }, { type: "map" }]
@@ -566,21 +688,45 @@ ${JSON.stringify(festival, null, 2)}
       // ----------------------------
       // 2) 📌 Follow-up questions + Label 생성 (대화 맥락 포함)
       // ----------------------------
-      const followRes = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "gpt-4o-mini",
-            response_format: { type: "json_object" },
-            messages: [
-              {
-                role: "system",
-                content: `
+
+      // 🔍 Check if AI is asking for date selection (server-side detection)
+      const summary = parsedReply.summary || "";
+      const isAskingForDate =
+        summary.includes("어느 날짜") ||
+        summary.includes("어떤 날짜") ||
+        summary.includes("which date") ||
+        summary.includes("what date") ||
+        summary.includes("どの日") ||
+        summary.includes("哪一天") ||
+        summary.includes("날짜를") ||
+        summary.includes("날짜 타임테이블") ||
+        summary.includes("보여드릴까요");
+
+      let followUp = [];
+      let followUpLabel = "AI 추천 질문"; // default Korean
+
+      if (isAskingForDate) {
+        // 🎯 Date selection mode - provide date buttons directly
+        console.log("✅ Detected date selection request, providing date buttons");
+        followUpLabel = "날짜를 선택해주세요";
+        followUp = ["9월 26일 (금)", "9월 27일 (토)", "9월 28일 (일)", "전체 일정 간단히"];
+      } else {
+        // 🤖 Regular mode - call AI to generate follow-up questions
+        const followRes = await fetch(
+          "https://api.openai.com/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${OPENAI_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "gpt-4o-mini",
+              response_format: { type: "json_object" },
+              messages: [
+                {
+                  role: "system",
+                  content: `
 You generate 3 short follow-up questions AND a label text based on the ENTIRE conversation context.
 
 CRITICAL: Detect the user's language by analyzing their most recent message.
@@ -609,7 +755,8 @@ Label translations (translate to user's language):
 - For any other language: translate "AI Suggested Questions" to that language
 
 IMPORTANT: The follow-up questions should be contextually relevant to the CURRENT topic being discussed.
-For example:
+
+For different topics:
 - If discussing food/restaurants, suggest questions about specific restaurants, prices, opening hours
 - If discussing parking, suggest questions about fees, capacity, specific locations
 - If discussing programs, suggest questions about times, target audience, locations
@@ -625,34 +772,33 @@ Example (English):
   "label": "AI Suggested Questions",
   "questions": ["What are the opening hours?","Where is the rain shelter?","Are there family programs?"]
 }
-            `.trim(),
-              },
-              ...conversationHistory,
-              { role: "assistant", content: parsedReply.summary },
-            ],
-          }),
-        }
-      );
+              `.trim(),
+                },
+                ...conversationHistory,
+                { role: "assistant", content: parsedReply.summary },
+              ],
+            }),
+          }
+        );
 
-      let followUp = [];
-      let followUpLabel = "AI 추천 질문"; // default Korean
-      try {
-        const followJson = await followRes.json();
-        const text = followJson?.choices?.[0]?.message?.content ?? "{}";
-        const parsed = JSON.parse(text);
+        try {
+          const followJson = await followRes.json();
+          const text = followJson?.choices?.[0]?.message?.content ?? "{}";
+          const parsed = JSON.parse(text);
 
-        if (parsed.label && typeof parsed.label === 'string') {
-          followUpLabel = parsed.label;
-        }
+          if (parsed.label && typeof parsed.label === 'string') {
+            followUpLabel = parsed.label;
+          }
 
-        if (Array.isArray(parsed.questions)) {
-          followUp = parsed.questions;
-        } else {
+          if (Array.isArray(parsed.questions)) {
+            followUp = parsed.questions;
+          } else {
+            followUp = [];
+          }
+        } catch (e) {
+          console.error("Follow-up parsing error:", e);
           followUp = [];
         }
-      } catch (e) {
-        console.error("Follow-up parsing error:", e);
-        followUp = [];
       }
 
       // ----------------------------

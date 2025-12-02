@@ -2,7 +2,7 @@ export type MessageRole = "user" | "assistant";
 export type MessageType = "text" | "image" | "map";
 
 // 데이터 구조 기반 카드 타입
-export type CardType = "keyvalue" | "grid" | "table" | "calendar" | "map";
+export type CardType = "keyvalue" | "grid" | "table" | "calendar" | "map" | "timetable";
 
 // Key-Value 카드 데이터
 export interface KeyValueData {
@@ -52,11 +52,30 @@ export interface MapData {
   zoom?: number; // 줌 레벨 (기본: 15)
 }
 
+// TimeTable 카드 데이터
+export interface TimeTableData {
+  timeConfig: {
+    startTime: string; // "09:00"
+    endTime: string; // "21:00"
+    interval: number; // 시간 간격 (분 단위, 예: 60 = 1시간)
+  };
+  programs: {
+    id: string; // 고유 식별자
+    name: string; // 프로그램 이름
+    sessions: {
+      date?: string; // "2025-09-26" (선택, 날짜별 필터링용)
+      startTime: string; // "10:00"
+      endTime: string; // "13:00"
+      note?: string; // 추가 정보 (선택)
+    }[];
+  }[];
+}
+
 // 카드 인터페이스
 export interface DetailCard {
   title: string;
   type: CardType;
-  data: KeyValueData | GridData | TableData | CalendarData | MapData | any;
+  data: KeyValueData | GridData | TableData | CalendarData | MapData | TimeTableData | any;
 }
 
 // 메시지 인터페이스

@@ -6,6 +6,10 @@
   "contact": "031-310-2920",
   "lostAndFound": "031-310-2922",
   "price": "무료 (일부 체험 프로그램 유료)",
+  "operatingHours": {
+    "startTime": "07:00",
+    "endTime": "21:30"
+  },
   "programs": {
     "timezone": "KST",
     "mainProgram": {

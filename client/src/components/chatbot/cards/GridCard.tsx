@@ -42,11 +42,11 @@ export default function GridCard({ title, data }: GridCardProps) {
                 {item.fields && item.fields.length > 0 && (
                   <div className="space-y-1 text-xs text-gray-700 mt-2">
                     {item.fields.map((field, fieldIdx) => (
-                      <div key={fieldIdx} className="flex items-start gap-1.5">
-                        <span className="font-medium text-gray-600">
+                      <div key={fieldIdx} className="flex items-start gap-2">
+                        <span className="font-medium text-gray-600 whitespace-nowrap">
                           {field.key}:
                         </span>
-                        <span className="font-medium">
+                        <span className="font-medium [word-break:keep-all]">
                           {field.value}
                         </span>
                       </div>
