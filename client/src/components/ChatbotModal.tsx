@@ -33,7 +33,9 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
   const [promptLabel, setPromptLabel] = useState("AI 추천 질문");
   const [isThinking, setIsThinking] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
-  const [showCardsForMessage, setShowCardsForMessage] = useState<Set<number>>(new Set());
+  const [showCardsForMessage, setShowCardsForMessage] = useState<Set<number>>(
+    new Set()
+  );
   const [showPrompts, setShowPrompts] = useState(true); // 초기값 true로 변경
 
   const fullMessage = "반가워요, AI 챗봇이에요.";
@@ -51,18 +53,18 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
   // 모달 열릴 때 body 스크롤 방지 + 맨 아래로 스크롤
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
       // 모달 열릴 때 맨 아래로 스크롤
       setTimeout(() => {
         if (chatEndRef.current) {
-          chatEndRef.current.scrollIntoView({ behavior: 'auto' });
+          chatEndRef.current.scrollIntoView({ behavior: "auto" });
         }
       }, 0);
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [isOpen]);
 
@@ -95,7 +97,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
   // textarea 자동 높이 조절
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = "auto";
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [input]);
@@ -103,7 +105,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
   // 메시지 추가 시 자동 스크롤
   useEffect(() => {
     if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
@@ -111,7 +113,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
   useEffect(() => {
     if (chatEndRef.current && showCardsForMessage.size > 0) {
       setTimeout(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 100); // 페이드인 애니메이션 시작 후 스크롤
     }
   }, [showCardsForMessage]);
@@ -120,7 +122,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
   useEffect(() => {
     if (chatEndRef.current && showPrompts) {
       setTimeout(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 100); // 페이드인 애니메이션 시작 후 스크롤
     }
   }, [showPrompts]);
@@ -244,10 +246,10 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
 
     // 대화 히스토리를 OpenAI 형식으로 변환 (텍스트만)
     const conversationHistory = updatedMessages
-      .filter(m => m.type === "text" && m.content) // 텍스트 메시지만
-      .map(m => ({
+      .filter((m) => m.type === "text" && m.content) // 텍스트 메시지만
+      .map((m) => ({
         role: m.role,
-        content: m.content
+        content: m.content,
       }));
 
     try {
@@ -256,7 +258,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userContent,
-          history: conversationHistory
+          history: conversationHistory,
         }),
       });
 
@@ -264,7 +266,8 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
 
       // 📌 구조화된 응답 파싱 (summary + cards)
       const replyData = data?.reply ?? {
-        summary: "죄송해요, 지금은 답변을 가져오지 못했어요. 잠시 후 다시 시도해 주세요.",
+        summary:
+          "죄송해요, 지금은 답변을 가져오지 못했어요. 잠시 후 다시 시도해 주세요.",
         cards: [],
       };
 
@@ -302,7 +305,11 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
       // ----------------------------------------
       // 📌 후속 질문이 있으면 → 우선 적용
       // ----------------------------------------
-      console.log("🔍 Follow-up data:", { aiFollowUps, aiFollowUpLabel, fullData: data });
+      console.log("🔍 Follow-up data:", {
+        aiFollowUps,
+        aiFollowUpLabel,
+        fullData: data,
+      });
 
       if (aiFollowUps.length > 0) {
         console.log("✅ Setting follow-up prompts:", aiFollowUps);
@@ -339,7 +346,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     const content = input.trim();
     setInput("");
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = "auto";
     }
     sendToAI(content);
   };
@@ -370,7 +377,7 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     setMessages([]);
     setInput("");
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = "auto";
     }
     setTypedText("");
     setIsThinking(false);
@@ -421,40 +428,85 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
           {messages.length === 0 ? (
             <div className="flex h-full items-center justify-center px-2 pb-24">
               <div className="w-full max-w-2xl flex flex-col items-start">
-              {/* AI Image */}
-              <img
-                src="/img-ai.webp"
-                alt="AI"
-                className="w-10 h-10 object-contain float-animation"
-              />
+                {/* AI Image */}
+                <img
+                  src="/img-ai.webp"
+                  alt="AI"
+                  className="w-10 h-10 object-contain float-animation pl-1"
+                />
 
-              {/* Typing Effect Text */}
-              <div className="text-left">
-                <h3 className="text-[20px] font-semibold text-gray-800 -tracking-[0.02em] mb-0.5">
-                  {fullMessage}
-                </h3>
-                <p className="text-[14px] font-medium text-gray-600 -tracking-[0.02em]">
-                  20주년 시흥갯골축제에 대해 모든 것을 물어보세요.
-                </p>
-              </div>
-
-              {/* Suggested Prompts */}
-              <div className="mt-10 w-full max-w-md space-y-3">
-                <p className="text-[13px] font-semibold text-gray-700 -tracking-[0.02em]">
-                  가장 많이 묻는 질문 Top3
-                </p>
-                <div className="grid gap-2">
-                  {suggestedPrompts.map((prompt, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handlePromptClick(prompt)}
-                    className="rounded-tr-2xl rounded-br-2xl rounded-bl-2xl border border-gray-100 px-4 py-3.5 text-left text-sm text-gray-800 font-medium transition-colors bg-gray-200 backdrop-blur-sm hover:bg-gray-200/90"
-                  >
-                    {prompt}
-                  </button>
-                ))}
+                {/* Typing Effect Text */}
+                <div className="text-left pl-1">
+                  <h3 className="text-[20px] font-semibold text-gray-800 -tracking-[0.02em] mb-0.5">
+                    {fullMessage}
+                  </h3>
+                  <p className="text-[14px] font-medium text-gray-600 -tracking-[0.02em]">
+                    20주년 시흥갯골축제에 대해 모든 것을 물어보세요!
+                  </p>
                 </div>
-              </div>
+
+                {/* Quick Action Buttons */}
+                <div className="mt-10 w-full max-w-md space-y-3">
+                  {/* <p className="text-[13px] font-semibold text-gray-700 -tracking-[0.02em]">
+                  가장 많이 묻는 질문 Top3
+                </p> */}
+                  <div className="grid gap-3">
+                    <div className="p-[2px] bg-gradient-to-r from-[rgba(250,208,196,0.9)] to-[rgba(255,209,255,0.9)] rounded-2xl">
+                      <button
+                        onClick={() =>
+                          handlePromptClick("축제 일정 캘린더에 추가해줘")
+                        }
+                        className="w-full bg-white hover:bg-gray-50 rounded-[14px] px-4 py-4 text-left transition-colors relative overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-[rgba(250,208,196,0.4)] to-[rgba(255,209,255,0.4)] pointer-events-none"></div>
+                        <div className="relative z-10">
+                          <div className="text-[15px] font-semibold text-gray-800 -tracking-[0.02em]">
+                            축제 일정 캘린더에 추가해줘
+                          </div>
+                          <div className="text-[13px] font-medium text-gray-600 -tracking-[0.01em]">
+                            원하는 일정을 구글 캘린더에 추가해드려요
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+
+                    <div className="p-[2px] bg-[linear-gradient(90deg,rgba(132,250,176,0.8)_0%,rgba(143,211,244,0.8)_100%)] rounded-2xl">
+                      <button
+                        onClick={() => handlePromptClick("행사장 위치를 알려줘")}
+                        className="w-full bg-white hover:bg-gray-50 rounded-[14px] px-4 py-4 text-left transition-colors relative overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(132,250,176,0.2)_0%,rgba(143,211,244,0.2)_100%)] pointer-events-none"></div>
+                        <div className="relative z-10">
+                          <div className="text-[15px] font-semibold text-gray-800 -tracking-[0.02em]">
+                            행사장 위치를 알려줘
+                          </div>
+                          <div className="text-[13px] font-medium text-gray-600 -tracking-[0.01em]">
+                            지도와 함께 정확한 행사장 위치를 알려드려요
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+
+                    <div className="p-[2px] bg-[linear-gradient(90deg,rgba(161,196,253,0.9)_0%,rgba(194,233,251,0.9)_100%)] rounded-2xl">
+                      <button
+                        onClick={() =>
+                          handlePromptClick("프로그램 타임테이블을 보내줘")
+                        }
+                        className="w-full bg-white hover:bg-gray-50 rounded-[14px] px-4 py-4 text-left transition-colors relative overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(161,196,253,0.2)_0%,rgba(194,233,251,0.2)_100%)] pointer-events-none"></div>
+                        <div className="relative z-10">
+                          <div className="text-[15px] font-semibold text-gray-800 -tracking-[0.02em]">
+                            프로그램 타임테이블을 보내줘
+                          </div>
+                          <div className="text-[13px] font-medium text-gray-600 -tracking-[0.01em]">
+                            한눈에 파악할 수 있게 타임테이블을 생성해드려요
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
@@ -499,10 +551,16 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                   <div key={message.id}>
                     <div
                       className={`flex ${
-                        message.role === "user" ? "justify-end" : "justify-start"
+                        message.role === "user"
+                          ? "justify-end"
+                          : "justify-start"
                       }`}
                     >
-                      <div className={`flex items-end gap-1 max-w-[90%] ${message.role === "user" ? "flex-row-reverse" : ""}`}>
+                      <div
+                        className={`flex items-end gap-1 max-w-[90%] ${
+                          message.role === "user" ? "flex-row-reverse" : ""
+                        }`}
+                      >
                         <div
                           className={`rounded-2xl -tracking-[0.01em] text-[14px] font-medium px-4 py-2 ${
                             message.role === "user"
@@ -514,7 +572,9 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                         </div>
                         {message.role === "assistant" && message.content && (
                           <button
-                            onClick={() => handleCopy(message.id, message.content)}
+                            onClick={() =>
+                              handleCopy(message.id, message.content)
+                            }
                             className="flex-shrink-0 p-1.5 transition-colors mb-1"
                             aria-label="Copy message"
                           >
@@ -529,11 +589,14 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                     </div>
 
                     {/* 구조화된 카드 표시 (AI 응답에만) */}
-                    {message.role === "assistant" && message.cards && message.cards.length > 0 && showCardsForMessage.has(message.id) && (
-                      <div className="fade-in">
-                        <CardRenderer cards={message.cards} />
-                      </div>
-                    )}
+                    {message.role === "assistant" &&
+                      message.cards &&
+                      message.cards.length > 0 &&
+                      showCardsForMessage.has(message.id) && (
+                        <div className="fade-in">
+                          <CardRenderer cards={message.cards} />
+                        </div>
+                      )}
                   </div>
                 );
               })}

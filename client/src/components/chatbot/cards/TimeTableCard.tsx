@@ -16,7 +16,20 @@ interface TimeTableCardProps {
 
 // 시간 문자열을 분(minutes)으로 변환
 const parseTimeToMinutes = (time: string): number => {
-  const [hours, minutes] = time.split(":").map(Number);
+  if (!time || typeof time !== "string") {
+    console.warn("Invalid time value:", time);
+    return 0;
+  }
+  const parts = time.split(":");
+  if (parts.length !== 2) {
+    console.warn("Invalid time format:", time);
+    return 0;
+  }
+  const [hours, minutes] = parts.map(Number);
+  if (isNaN(hours) || isNaN(minutes)) {
+    console.warn("Invalid time numbers:", time);
+    return 0;
+  }
   return hours * 60 + minutes;
 };
 
@@ -24,11 +37,25 @@ const parseTimeToMinutes = (time: string): number => {
 const formatMinutesToTime = (minutes: number): string => {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  return `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`;
+  return `${hours.toString().padStart(2, "0")}:${mins
+    .toString()
+    .padStart(2, "0")}`;
 };
 
 // 시간 슬롯 배열 생성
-const generateTimeSlots = (startTime: string, endTime: string, interval: number): string[] => {
+const generateTimeSlots = (
+  startTime: string,
+  endTime: string,
+  interval: number
+): string[] => {
+  if (!startTime || !endTime || !interval || interval <= 0) {
+    console.warn("Invalid time slot parameters:", {
+      startTime,
+      endTime,
+      interval,
+    });
+    return ["00:00"];
+  }
   const startMinutes = parseTimeToMinutes(startTime);
   const endMinutes = parseTimeToMinutes(endTime);
   const slots: string[] = [];
@@ -37,7 +64,7 @@ const generateTimeSlots = (startTime: string, endTime: string, interval: number)
     slots.push(formatMinutesToTime(current));
   }
 
-  return slots;
+  return slots.length > 0 ? slots : ["00:00"];
 };
 
 // 세션의 정확한 위치 계산 (분 단위)
@@ -52,6 +79,22 @@ const calculateSessionPosition = (
   tableStartTime: string,
   interval: number
 ): SessionPosition => {
+  if (
+    !sessionStartTime ||
+    !sessionEndTime ||
+    !tableStartTime ||
+    !interval ||
+    interval <= 0
+  ) {
+    console.warn("Invalid session position parameters:", {
+      sessionStartTime,
+      sessionEndTime,
+      tableStartTime,
+      interval,
+    });
+    return { topPx: 0, heightPx: 64 }; // Default 1 slot height
+  }
+
   const tableStart = parseTimeToMinutes(tableStartTime);
   const sessionStart = parseTimeToMinutes(sessionStartTime);
   const sessionEnd = parseTimeToMinutes(sessionEndTime);
@@ -62,16 +105,20 @@ const calculateSessionPosition = (
 
   // 범위 체크: 세션이 테이블 시작 전에 시작하는 경우 0으로 제한
   if (startMinutesFromTable < 0) {
-    console.warn(`Session starts before table: ${sessionStartTime} < ${tableStartTime}`);
+    console.warn(
+      `Session starts before table: ${sessionStartTime} < ${tableStartTime}`
+    );
     startMinutesFromTable = 0;
   }
 
   // 픽셀 단위로 변환 (interval 분마다 64px)
   const pixelsPerMinute = 64 / interval;
   const topPx = startMinutesFromTable * pixelsPerMinute;
-  const heightPx = (endMinutesFromTable - startMinutesFromTable) * pixelsPerMinute;
+  const heightPx =
+    (endMinutesFromTable - startMinutesFromTable) * pixelsPerMinute;
 
-  return { topPx, heightPx };
+  // Ensure minimum height
+  return { topPx, heightPx: Math.max(heightPx, 10) };
 };
 
 // 시간 헤더 컴포넌트
@@ -81,13 +128,14 @@ interface TimeHeaderProps {
 
 // 시간 슬롯들 컴포넌트
 const TimeSlots = ({ slots }: TimeHeaderProps) => (
-  <div className="sticky left-0 bg-white z-10 border-r border-gray-300 w-[40px]">
+  <div className="sticky left-0 bg-white z-10 w-[40px]">
     {slots.map((time) => (
       <div
         key={time}
-        className="h-16 flex items-center justify-center text-[11px] font-semibold text-gray-800 border-b border-gray-200"
+        className="h-16 text-[9px] font-semibold text-gray-800 text-center"
+        style={{ lineHeight: "64px" }}
       >
-        {time}
+        {time.replace(':00', '')}
       </div>
     ))}
   </div>
@@ -120,15 +168,28 @@ const getProgramColor = (programId: string): { bg: string; hover: string } => {
 // 프로그램 헤더
 interface ProgramHeaderProps {
   name: string;
+  programId: string;
 }
 
-const ProgramHeader = ({ name }: ProgramHeaderProps) => (
-  <div className="border-r border-gray-200 w-[70px] flex items-center justify-center px-2 py-1.5 text-[11px] font-semibold text-gray-900 border-b border-gray-300">
-    <span className="text-center leading-tight [word-break:keep-all]">
+const ProgramHeader = ({ name, programId }: ProgramHeaderProps) => {
+  const programColor = getProgramColor(programId);
+
+  return (
+    <div
+      className={`w-[70px] px-2 py-2 text-[9px] font-semibold text-gray-700 text-center ${programColor.bg}`}
+      style={{
+        minHeight: "48px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        lineHeight: "1.2",
+        wordBreak: "keep-all",
+      }}
+    >
       {name}
-    </span>
-  </div>
-);
+    </div>
+  );
+};
 
 // 프로그램 세션 본체
 interface ProgramBodyProps {
@@ -138,20 +199,24 @@ interface ProgramBodyProps {
   totalSlots: number;
 }
 
-const ProgramBody = ({ program, tableStartTime, interval, totalSlots }: ProgramBodyProps) => {
+const ProgramBody = ({
+  program,
+  tableStartTime,
+  interval,
+  totalSlots,
+}: ProgramBodyProps) => {
   const programColor = getProgramColor(program.id);
 
   return (
-    <div className="relative border-r border-gray-200 w-[70px] overflow-hidden">
-        {Array.from({ length: totalSlots }).map((_, index) => (
-          <div
-            key={index}
-            className="h-16 border-b border-gray-100"
-          />
-        ))}
+    <div className="relative w-[70px] overflow-hidden">
+      {Array.from({ length: totalSlots }).map((_, index) => (
+        <div key={index} className="h-16 border-b border-gray-300" />
+      ))}
 
-        {/* 세션 블록들 (절대 위치) */}
-        {program.sessions.map((session, sessionIndex) => {
+      {/* 세션 블록들 (절대 위치) */}
+      {program.sessions
+        .filter((session) => session && session.startTime && session.endTime) // Filter out invalid sessions
+        .map((session, sessionIndex) => {
           const { topPx, heightPx } = calculateSessionPosition(
             session.startTime,
             session.endTime,
@@ -168,11 +233,11 @@ const ProgramBody = ({ program, tableStartTime, interval, totalSlots }: ProgramB
                 height: `${heightPx}px`,
               }}
             >
-              <div className="text-[12px] font-bold leading-tight text-gray-800 [word-break:keep-all]">
+              <div className="text-[9px] font-bold leading-tight text-gray-800 [word-break:keep-all]">
                 {session.startTime} - {session.endTime}
               </div>
               {session.note && (
-                <div className="text-[10px] font-semibold mt-1 leading-tight text-gray-700 [word-break:keep-all]">
+                <div className="text-[8px] font-medium mt-1 leading-tight text-gray-700 [word-break:keep-all]">
                   {session.note}
                 </div>
               )}
@@ -184,11 +249,33 @@ const ProgramBody = ({ program, tableStartTime, interval, totalSlots }: ProgramB
 };
 
 export default function TimeTableCard({ title, data }: TimeTableCardProps) {
+  // Data validation
+  if (!data || !data.timeConfig || !data.programs) {
+    console.error("Invalid timetable data:", data);
+    return (
+      <Accordion type="single" collapsible>
+        <AccordionItem
+          value="item-1"
+          className="border border-gray-300 rounded-md px-4"
+        >
+          <AccordionTrigger className="text-sm font-semibold text-gray-900 hover:no-underline">
+            {title}
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="text-sm text-gray-600 p-4">
+              타임테이블 데이터를 불러올 수 없습니다.
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    );
+  }
+
   const { timeConfig, programs } = data;
   const timeSlots = generateTimeSlots(
-    timeConfig.startTime,
-    timeConfig.endTime,
-    timeConfig.interval
+    timeConfig?.startTime,
+    timeConfig?.endTime,
+    timeConfig?.interval
   );
 
   const tableRef = useRef<HTMLDivElement>(null);
@@ -208,33 +295,38 @@ export default function TimeTableCard({ title, data }: TimeTableCardProps) {
       const originalWidth = element.style.width;
 
       // 전체 보이도록 임시 변경
-      element.style.overflow = 'visible';
-      element.style.width = 'auto';
+      element.style.overflow = "visible";
+      element.style.width = "auto";
 
-      // 약간의 딜레이 (브라우저가 리플로우할 시간)
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // 약간의 딜레이 (브라우저가 리플로우할 시간 및 폰트 로딩 대기)
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      // 폰트가 완전히 로드될 때까지 대기
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
 
       // 캡처
       const canvas = await html2canvas(tableRef.current, {
         scale: 2, // 고해상도
         useCORS: true,
-        backgroundColor: '#ffffff',
+        backgroundColor: "#ffffff",
         logging: false,
+        allowTaint: false,
       });
 
       // 다운로드
-      const link = document.createElement('a');
-      link.download = `timetable-${title.replace(/\s+/g, '-')}.png`;
-      link.href = canvas.toDataURL('image/png');
+      const link = document.createElement("a");
+      link.download = `timetable-${title.replace(/\s+/g, "-")}.png`;
+      link.href = canvas.toDataURL("image/png");
       link.click();
 
       // 원래대로 복구
       element.style.overflow = originalOverflow;
       element.style.width = originalWidth;
-
     } catch (error) {
-      console.error('Failed to download timetable:', error);
-      alert('타임테이블 다운로드에 실패했습니다.');
+      console.error("Failed to download timetable:", error);
+      alert("타임테이블 다운로드에 실패했습니다.");
     } finally {
       setIsDownloading(false);
     }
@@ -242,7 +334,10 @@ export default function TimeTableCard({ title, data }: TimeTableCardProps) {
 
   return (
     <Accordion type="single" collapsible>
-      <AccordionItem value="item-1" className="border border-gray-300 rounded-md px-4">
+      <AccordionItem
+        value="item-1"
+        className="border border-gray-300 rounded-md px-4"
+      >
         <AccordionTrigger className="text-sm font-semibold text-gray-900 hover:no-underline">
           <div className="flex items-center justify-between w-full pr-2">
             <span>{title}</span>
@@ -255,35 +350,66 @@ export default function TimeTableCard({ title, data }: TimeTableCardProps) {
               className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
             >
               <Download className="h-3 w-3" />
-              <span>{isDownloading ? '저장 중...' : 'PNG'}</span>
+              <span>{isDownloading ? "저장 중..." : "PNG"}</span>
             </button>
           </div>
         </AccordionTrigger>
         <AccordionContent>
           <div ref={containerRef} className="pt-2 overflow-x-auto">
-            <div ref={tableRef} className="inline-block border border-gray-300 overflow-hidden">
+            <div ref={tableRef} className="inline-block overflow-hidden" style={{ fontFamily: 'GmarketSans' }}>
+              {/* 타이틀 헤더 */}
+              <div
+                className="bg-gray-900 text-white px-4 py-3 text-left font-bold text-[11px]"
+                style={{
+                  minHeight: "48px",
+                  display: "flex",
+                  alignItems: "center",
+                  lineHeight: "1.2",
+                }}
+              >
+                {title}
+              </div>
+
               {/* 헤더 행 - 모든 헤더가 같은 높이를 가짐 */}
               <div className="flex">
-                <div className="sticky left-0 bg-white z-10 border-r border-gray-300 w-[40px] flex items-center justify-center font-semibold text-[11px] text-gray-600 border-b border-gray-300 py-1.5">
-                  시간
+                <div
+                  className="sticky left-0 bg-white z-10 w-[40px] font-semibold text-[11px] text-gray-600 py-2 text-center"
+                  style={{
+                    minHeight: "48px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    lineHeight: "1.2",
+                  }}
+                >
                 </div>
-                {programs.map((program) => (
-                  <ProgramHeader key={program.id} name={program.name} />
-                ))}
+                {programs
+                  .filter(
+                    (program) =>
+                      program && program.id && program.name && program.sessions
+                  )
+                  .map((program) => (
+                    <ProgramHeader key={program.id} name={program.name} programId={program.id} />
+                  ))}
               </div>
 
               {/* 본체 행 */}
               <div className="flex">
                 <TimeSlots slots={timeSlots} />
-                {programs.map((program) => (
-                  <ProgramBody
-                    key={program.id}
-                    program={program}
-                    tableStartTime={timeConfig.startTime}
-                    interval={timeConfig.interval}
-                    totalSlots={timeSlots.length - 1}
-                  />
-                ))}
+                {programs
+                  .filter(
+                    (program) =>
+                      program && program.id && program.name && program.sessions
+                  )
+                  .map((program) => (
+                    <ProgramBody
+                      key={program.id}
+                      program={program}
+                      tableStartTime={timeConfig.startTime}
+                      interval={timeConfig.interval}
+                      totalSlots={timeSlots.length - 1}
+                    />
+                  ))}
               </div>
             </div>
           </div>

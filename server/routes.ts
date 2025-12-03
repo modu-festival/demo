@@ -290,7 +290,125 @@ Example in English (pricing table):
 
 4. type: "calendar" - For adding events to Google Calendar
 IMPORTANT: Translate ALL text fields to the user's language!
-Example in Korean:
+
+CRITICAL CALENDAR INTENT DETECTION:
+When user asks to add to calendar, distinguish between two intents:
+
+A) FESTIVAL EVENT (축제 일정 추가):
+   Questions: "축제 일정 캘린더에 추가해줘", "축제 날짜 알려줘", "Add festival to calendar"
+   Intent: User wants to add the FESTIVAL EVENT(S) to their calendar
+
+   WORKFLOW (similar to timetable):
+
+   STEP 1: When user asks without specifying dates, ALWAYS ask which date(s) first. DO NOT provide calendar immediately.
+   Return EXACTLY this structure (adjust dates to match the festival period):
+   {
+     "summary": "축제는 9월 26일부터 28일까지 3일간 진행돼요. 어느 날짜를 캘린더에 추가하시겠어요?",
+     "cards": []
+   }
+
+   And in the followUp generation request, suggest date selection options:
+   - followUp: ["9월 26일 (금)", "9월 27일 (토)", "9월 28일 (일)", "전체 기간"]
+   - followUpLabel: "날짜를 선택해주세요"
+
+   STEP 2: When user selects a specific date, create festival event for THAT DATE ONLY
+   {
+     "summary": "9월 27일 토요일 축제 일정을 캘린더에 추가해드릴게요!",
+     "cards": [
+       {
+         "title": "캘린더에 일정 추가",
+         "type": "calendar",
+         "data": {
+           "events": [
+             {
+               "title": "20주년 시흥갯골축제",
+               "date": "2025-09-27",
+               "time": "07:00~21:30",
+               "location": "시흥갯골생태공원 (경기도 시흥시 동서로 287)",
+               "description": "다양한 공연, 체험, 전시 프로그램이 펼쳐집니다!"
+             }
+           ]
+         }
+       }
+     ]
+   }
+
+   STEP 3: When user selects "전체 기간" (all days), create festival events for ALL DATES
+   {
+     "summary": "전체 기간 축제 일정을 캘린더에 추가해드릴게요!",
+     "cards": [
+       {
+         "title": "캘린더에 일정 추가",
+         "type": "calendar",
+         "data": {
+           "events": [
+             {
+               "title": "20주년 시흥갯골축제 - 1일차",
+               "date": "2025-09-26",
+               "time": "07:00~21:30",
+               "location": "시흥갯골생태공원 (경기도 시흥시 동서로 287)",
+               "description": "축제 첫째 날! 다양한 공연, 체험, 전시 프로그램이 펼쳐집니다!"
+             },
+             {
+               "title": "20주년 시흥갯골축제 - 2일차",
+               "date": "2025-09-27",
+               "time": "07:00~21:30",
+               "location": "시흥갯골생태공원 (경기도 시흥시 동서로 287)",
+               "description": "축제 둘째 날! 다양한 공연, 체험, 전시 프로그램이 펼쳐집니다!"
+             },
+             {
+               "title": "20주년 시흥갯골축제 - 3일차",
+               "date": "2025-09-28",
+               "time": "07:00~21:30",
+               "location": "시흥갯골생태공원 (경기도 시흥시 동서로 287)",
+               "description": "축제 마지막 날! 다양한 공연, 체험, 전시 프로그램이 펼쳐집니다!"
+             }
+           ]
+         }
+       }
+     ]
+   }
+
+B) PROGRAM EVENTS (특정 프로그램):
+   Questions: "소금의 기억 공연 캘린더에 추가해줘", "버스킹 일정 알려줘", "Add this program to calendar"
+   Intent: User wants to add SPECIFIC PROGRAM(S) as separate events
+   Response: Return MULTIPLE calendar events, one for each program/session
+
+Example for FESTIVAL EVENT (Korean):
+{
+  "title": "캘린더에 일정 추가",
+  "type": "calendar",
+  "data": {
+    "events": [
+      {
+        "title": "20주년 시흥갯골축제",
+        "date": "2025-09-26",
+        "time": "07:00~21:30",
+        "location": "시흥갯골생태공원 (경기도 시흥시 동서로 287)",
+        "description": "3일간 진행됩니다 (9월 26일~28일). 다양한 공연, 체험, 전시 프로그램이 펼쳐집니다!"
+      }
+    ]
+  }
+}
+
+Example for FESTIVAL EVENT (English):
+{
+  "title": "Add to Calendar",
+  "type": "calendar",
+  "data": {
+    "events": [
+      {
+        "title": "20th Siheung Gaetgol Festival",
+        "date": "2025-09-26",
+        "time": "07:00~21:30",
+        "location": "Siheung Gaetgol Ecological Park (287 Dongseo-ro, Siheung-si)",
+        "description": "3-day festival (Sep 26-28). Various performances, activities, and exhibitions await!"
+      }
+    ]
+  }
+}
+
+Example for PROGRAM EVENTS (Korean):
 {
   "title": "캘린더에 일정 추가",
   "type": "calendar",
@@ -313,7 +431,7 @@ Example in Korean:
   }
 }
 
-Example in English (same data, translated):
+Example for PROGRAM EVENTS (English):
 {
   "title": "Add to Calendar",
   "type": "calendar",
@@ -387,9 +505,15 @@ When creating a timetable, determine the time range as follows:
    - Use these as startTime and endTime
 3. Extend the range slightly if needed (e.g., add 30 minutes padding)
 
+CRITICAL TIMETABLE TITLE FORMAT:
+Always include the festival name in the title: "Festival Name + Date + Timetable"
+- Korean example: "20주년 시흥갯골축제 9월 26일 (금) 타임테이블"
+- English example: "20th Siheung Gaetgol Festival September 26 (Fri) Timetable"
+This helps users identify which festival's timetable they're saving.
+
 Example in Korean (specific date):
 {
-  "title": "9월 26일 (금) 타임테이블",
+  "title": "20주년 시흥갯골축제 9월 26일 (금) 타임테이블",
   "type": "timetable",
   "data": {
     "timeConfig": {
@@ -418,7 +542,7 @@ Example in Korean (specific date):
 
 Example in English (specific date):
 {
-  "title": "September 26 (Fri) Timetable",
+  "title": "20th Siheung Gaetgol Festival September 26 (Fri) Timetable",
   "type": "timetable",
   "data": {
     "timeConfig": {
@@ -468,7 +592,7 @@ STEP 2: When user selects a specific date, filter programs for that date only
   "cards": [
     {
       "type": "timetable",
-      "title": "9월 27일 (토) 타임테이블",
+      "title": "20주년 시흥갯골축제 9월 27일 (토) 타임테이블",
       "data": {
         "timeConfig": { "startTime": "07:00", "endTime": "21:30", "interval": 60 },
         "programs": [
@@ -691,16 +815,24 @@ ${JSON.stringify(festival, null, 2)}
 
       // 🔍 Check if AI is asking for date selection (server-side detection)
       const summary = parsedReply.summary || "";
+      const hasCards = Array.isArray(parsedReply.cards) && parsedReply.cards.length > 0;
+
       const isAskingForDate =
-        summary.includes("어느 날짜") ||
-        summary.includes("어떤 날짜") ||
-        summary.includes("which date") ||
-        summary.includes("what date") ||
-        summary.includes("どの日") ||
-        summary.includes("哪一天") ||
-        summary.includes("날짜를") ||
-        summary.includes("날짜 타임테이블") ||
-        summary.includes("보여드릴까요");
+        !hasCards && ( // Only trigger if NO cards (meaning it's asking, not answering)
+          summary.includes("어느 날짜") ||
+          summary.includes("어떤 날짜") ||
+          summary.includes("which date") ||
+          summary.includes("what date") ||
+          summary.includes("どの日") ||
+          summary.includes("哪一天") ||
+          summary.includes("날짜를") ||
+          summary.includes("날짜 타임테이블") ||
+          summary.includes("보여드릴까요") ||
+          summary.includes("추가하시겠어요") ||
+          summary.includes("캘린더에 추가") ||
+          summary.includes("add to calendar") ||
+          summary.includes("カレンダーに追加")
+        );
 
       let followUp = [];
       let followUpLabel = "AI 추천 질문"; // default Korean
@@ -709,7 +841,28 @@ ${JSON.stringify(festival, null, 2)}
         // 🎯 Date selection mode - provide date buttons directly
         console.log("✅ Detected date selection request, providing date buttons");
         followUpLabel = "날짜를 선택해주세요";
-        followUp = ["9월 26일 (금)", "9월 27일 (토)", "9월 28일 (일)", "전체 일정 간단히"];
+
+        // Distinguish between timetable and calendar requests
+        const isCalendarRequest =
+          summary.includes("캘린더") ||
+          summary.includes("추가하시겠어요") ||
+          summary.includes("calendar") ||
+          summary.includes("カレンダー");
+
+        const isTimetableRequest =
+          summary.includes("타임테이블") ||
+          summary.includes("시간표") ||
+          summary.includes("timetable") ||
+          summary.includes("schedule");
+
+        if (isCalendarRequest) {
+          followUp = ["9월 26일 (금)", "9월 27일 (토)", "9월 28일 (일)", "전체 기간"];
+        } else if (isTimetableRequest) {
+          followUp = ["9월 26일 (금)", "9월 27일 (토)", "9월 28일 (일)", "전체 일정 간단히"];
+        } else {
+          // Default to timetable format
+          followUp = ["9월 26일 (금)", "9월 27일 (토)", "9월 28일 (일)", "전체 일정 간단히"];
+        }
       } else {
         // 🤖 Regular mode - call AI to generate follow-up questions
         const followRes = await fetch(
