@@ -135,7 +135,7 @@ const TimeSlots = ({ slots }: TimeHeaderProps) => (
         className="h-16 text-[9px] font-semibold text-gray-800 text-center"
         style={{ lineHeight: "64px" }}
       >
-        {time.replace(':00', '')}
+        {time.replace(":00", "")}
       </div>
     ))}
   </div>
@@ -338,25 +338,31 @@ export default function TimeTableCard({ title, data }: TimeTableCardProps) {
         value="item-1"
         className="border border-gray-300 rounded-md px-4"
       >
-        <AccordionTrigger className="text-sm font-semibold text-gray-900 hover:no-underline">
-          <div className="flex items-center justify-between w-full pr-2">
-            <span>{title}</span>
+        <AccordionTrigger className="text-sm font-semibold text-gray-900 hover:no-underline overflow-hidden">
+          <div className="flex items-center gap-2 w-full min-w-0 pr-2 overflow-hidden">
+            <span className="truncate flex-1 min-w-0 text-left">{title}</span>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleDownload();
               }}
               disabled={isDownloading}
-              className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+              className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 flex-shrink-0"
             >
-              <Download className="h-3 w-3" />
-              <span>{isDownloading ? "저장 중..." : "PNG"}</span>
+              <Download className="h-3 w-3 flex-shrink-0" />
+              <span className="whitespace-nowrap">
+                {isDownloading ? "저장 중..." : "PNG"}
+              </span>
             </button>
           </div>
         </AccordionTrigger>
         <AccordionContent>
           <div ref={containerRef} className="pt-2 overflow-x-auto">
-            <div ref={tableRef} className="inline-block overflow-hidden" style={{ fontFamily: 'GmarketSans' }}>
+            <div
+              ref={tableRef}
+              className="inline-block overflow-hidden"
+              style={{ fontFamily: "GmarketSans" }}
+            >
               {/* 타이틀 헤더 */}
               <div
                 className="bg-gray-900 text-white px-4 py-3 text-left font-bold text-[11px]"
@@ -381,15 +387,18 @@ export default function TimeTableCard({ title, data }: TimeTableCardProps) {
                     justifyContent: "center",
                     lineHeight: "1.2",
                   }}
-                >
-                </div>
+                ></div>
                 {programs
                   .filter(
                     (program) =>
                       program && program.id && program.name && program.sessions
                   )
                   .map((program) => (
-                    <ProgramHeader key={program.id} name={program.name} programId={program.id} />
+                    <ProgramHeader
+                      key={program.id}
+                      name={program.name}
+                      programId={program.id}
+                    />
                   ))}
               </div>
 
