@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { X, ArrowUp, RotateCcw, Copy, Check } from "lucide-react";
+import { X, ArrowUp, RotateCcw, Copy, Check, Mic } from "lucide-react";
 import { Message } from "./chatbot/types";
 import CardRenderer from "./chatbot/cards/CardRenderer";
+import { useRealtimeAI } from "@/hooks/use-realtime-ai";
 
 interface ChatbotModalProps {
   isOpen: boolean;
@@ -37,6 +38,9 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     new Set()
   );
   const [showPrompts, setShowPrompts] = useState(true); // 초기값 true로 변경
+
+  // AI 음성안내 기능
+  const { startCall, endCall, isConnecting, isConnected } = useRealtimeAI();
 
   const fullMessage = "반가워요, AI 챗봇이에요.";
 
@@ -397,6 +401,69 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
     }
   };
 
+  // AI 음성안내 호출
+  const handleCallClick = async () => {
+    try {
+      if ("requestIdleCallback" in window) {
+        (window as any).requestIdleCallback(() => {
+          playRingToneAsync();
+        });
+      } else {
+        setTimeout(() => {
+          playRingToneAsync();
+        }, 0);
+      }
+    } catch (error) {
+      console.warn("Failed to create ring audio:", error);
+    }
+
+    await startCall("ko");
+  };
+
+  const playRingToneAsync = () => {
+    try {
+      const audioContext = new (window.AudioContext ||
+        (window as any).webkitAudioContext)();
+
+      const playRingTone = () => {
+        const oscillator1 = audioContext.createOscillator();
+        const oscillator2 = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator1.connect(gainNode);
+        oscillator2.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator1.frequency.setValueAtTime(440, audioContext.currentTime);
+        oscillator2.frequency.setValueAtTime(480, audioContext.currentTime);
+
+        oscillator1.type = "sine";
+        oscillator2.type = "sine";
+
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(
+          0.15,
+          audioContext.currentTime + 0.1
+        );
+        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime + 1.0);
+        gainNode.gain.linearRampToValueAtTime(
+          0,
+          audioContext.currentTime + 1.1
+        );
+
+        oscillator1.start(audioContext.currentTime);
+        oscillator2.start(audioContext.currentTime);
+        oscillator1.stop(audioContext.currentTime + 1.1);
+        oscillator2.stop(audioContext.currentTime + 1.1);
+      };
+
+      playRingTone();
+      setTimeout(() => playRingTone(), 1500);
+    } catch (error) {
+      console.warn("Failed to create ring audio:", error);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -656,8 +723,20 @@ export default function ChatbotModal({ isOpen, onClose }: ChatbotModalProps) {
                 onKeyDown={handleKeyDown}
                 placeholder="AI 챗봇에게 질문해보세요"
                 rows={1}
-                className="w-full rounded-3xl border border-gray-400 py-3 pl-4 pr-14 outline-none transition-colors focus:border-gray-400 font-medium text-[14px] -tracking-[0.02em] resize-none overflow-hidden max-h-32"
+                className="w-full rounded-3xl border border-gray-400 py-3 pl-4 pr-24 outline-none transition-colors focus:border-gray-400 font-medium text-[14px] -tracking-[0.02em] resize-none overflow-hidden max-h-32"
               />
+              <button
+                onClick={isConnected ? endCall : handleCallClick}
+                disabled={isConnecting}
+                className={`absolute right-12 top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full transition-colors ${
+                  isConnected
+                    ? "bg-red-500 text-white hover:bg-red-600"
+                    : "bg-transparent text-gray-600 hover:bg-gray-200"
+                } disabled:opacity-50`}
+                aria-label={isConnected ? "End AI call" : "Start AI call"}
+              >
+                <Mic className="h-5 w-5" />
+              </button>
               <button
                 onClick={handleSend}
                 disabled={!input.trim()}
