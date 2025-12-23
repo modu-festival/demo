@@ -485,7 +485,7 @@ export function HeroSection({
               : "bg-white/20 hover:bg-white/30 text-white"
           }`}
         >
-          <Phone className="mr-2 h-5 w-5" />
+          {/* <Phone className="mr-2 h-5 w-5" /> */}
           {isConnected
             ? getTranslation(lang, "aiCallEnd") ?? "통화 종료"
             : getTranslation(lang, "aiCallButton")}
