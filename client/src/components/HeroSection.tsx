@@ -28,11 +28,9 @@ export function HeroSection({
   const [showVideo, setShowVideo] = useState(true);
   const [animationStarted, setAnimationStarted] = useState(false);
 
-  // 폰트 로딩 체크
   useEffect(() => {
     const checkFonts = async () => {
       try {
-        // 모든 폰트가 로드되었는지 확인
         await Promise.all([
           document.fonts.load("900 16px Yeongdo"),
           document.fonts.load("500 16px GmarketSans"),
@@ -41,40 +39,27 @@ export function HeroSection({
         setFontsLoaded(true);
       } catch (error) {
         console.warn("Font loading check failed:", error);
-        // 폰트 로딩 실패 시에도 UI를 표시
         setFontsLoaded(true);
       }
     };
-
     checkFonts();
   }, []);
 
-  // 비디오 자동 재생 처리 (모바일 대응)
   useEffect(() => {
     if (!showVideo || !videoRef.current) return;
-
     const video = videoRef.current;
-
     const playPromise = video.play();
 
     if (playPromise !== undefined) {
       playPromise
-        .then(() => {
-          // 자동 재생 성공
-          console.log("비디오 자동 재생 성공");
-        })
+        .then(() => console.log("비디오 자동 재생 성공"))
         .catch((error) => {
-          // 자동 재생 실패 시 사용자 상호작용 후 재생 시도
-          console.log("비디오 자동 재생 실패, 사용자 상호작용 대기:", error);
-
+          console.log("비디오 자동 재생 실패, 상호작용 대기:", error);
           const handleFirstInteraction = () => {
-            video.play().catch((err) => {
-              console.warn("비디오 재생 실패:", err);
-            });
+            video.play().catch(console.warn);
             document.removeEventListener("touchstart", handleFirstInteraction);
             document.removeEventListener("click", handleFirstInteraction);
           };
-
           document.addEventListener("touchstart", handleFirstInteraction, {
             once: true,
           });
@@ -88,6 +73,7 @@ export function HeroSection({
   const handleCallClick = async () => {
     onAICall();
 
+    // 1. 링톤 재생 시도 (실패해도 AI 통화는 진행되어야 함)
     try {
       if ("requestIdleCallback" in window) {
         (window as any).requestIdleCallback(() => {
@@ -99,63 +85,67 @@ export function HeroSection({
         }, 0);
       }
     } catch (error) {
-      console.warn("Failed to create ring audio:", error);
+      console.warn("Ringtone error:", error);
     }
 
+    // 2. AI 통화 시작 (User Gesture가 유효할 때 getUserMedia 실행됨)
     await startCall(lang);
   };
 
   const playRingToneAsync = () => {
     try {
-      const audioContext = new (window.AudioContext ||
-        (window as any).webkitAudioContext)();
+      const AudioContext =
+        window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new AudioContext();
 
       const playRingTone = () => {
-        const oscillator1 = audioContext.createOscillator();
-        const oscillator2 = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
+        const oscillator1 = ctx.createOscillator();
+        const oscillator2 = ctx.createOscillator();
+        const gainNode = ctx.createGain();
 
         oscillator1.connect(gainNode);
         oscillator2.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+        gainNode.connect(ctx.destination);
 
-        oscillator1.frequency.setValueAtTime(440, audioContext.currentTime);
-        oscillator2.frequency.setValueAtTime(480, audioContext.currentTime);
+        oscillator1.frequency.setValueAtTime(440, ctx.currentTime);
+        oscillator2.frequency.setValueAtTime(480, ctx.currentTime);
 
         oscillator1.type = "sine";
         oscillator2.type = "sine";
 
-        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-        gainNode.gain.linearRampToValueAtTime(
-          0.15,
-          audioContext.currentTime + 0.1
-        );
-        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime + 1.0);
-        gainNode.gain.linearRampToValueAtTime(
-          0,
-          audioContext.currentTime + 1.1
-        );
+        gainNode.gain.setValueAtTime(0, ctx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.1);
+        gainNode.gain.setValueAtTime(0.15, ctx.currentTime + 1.0);
+        gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.1);
 
-        oscillator1.start(audioContext.currentTime);
-        oscillator2.start(audioContext.currentTime);
-        oscillator1.stop(audioContext.currentTime + 1.1);
-        oscillator2.stop(audioContext.currentTime + 1.1);
+        oscillator1.start(ctx.currentTime);
+        oscillator2.start(ctx.currentTime);
+        oscillator1.stop(ctx.currentTime + 1.1);
+        oscillator2.stop(ctx.currentTime + 1.1);
       };
 
       playRingTone();
-      setTimeout(() => playRingTone(), 1500);
+
+      // 두 번째 링톤 재생 및 컨텍스트 정리
+      setTimeout(() => {
+        playRingTone();
+        // 소리가 완전히 끝난 후(1.5초 + 1.1초 + 여유분) Context 닫기
+        setTimeout(() => {
+          if (ctx.state !== "closed") {
+            ctx.close().catch(console.warn);
+          }
+        }, 1200);
+      }, 1500);
     } catch (error) {
       console.warn("Failed to create ring audio:", error);
     }
   };
 
-  // Fireworks animation setup
+  // ... (Fireworks 관련 코드는 기존과 동일하므로 생략하지 않고 그대로 포함합니다)
   useEffect(() => {
     if (!animationStarted) return;
-
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -167,10 +157,8 @@ export function HeroSection({
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
     };
-
     window.addEventListener("resize", resizeHandler, { passive: true });
 
-    // Particle class
     class Particle {
       x: number;
       y: number;
@@ -179,7 +167,6 @@ export function HeroSection({
       alpha: number;
       decay: number;
       radius: number;
-
       constructor(
         x: number,
         y: number,
@@ -194,17 +181,14 @@ export function HeroSection({
         this.decay = Math.random() * 0.015 + 0.015;
         this.radius = Math.random() * 2 + 1;
       }
-
       update() {
         this.velocity.x *= 0.98;
         this.velocity.y *= 0.98;
         this.velocity.y += 0.15;
-
         this.x += this.velocity.x;
         this.y += this.velocity.y;
         this.alpha -= this.decay;
       }
-
       draw() {
         if (!ctx) return;
         ctx.save();
@@ -213,7 +197,6 @@ export function HeroSection({
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = this.color;
         ctx.fill();
-
         ctx.shadowBlur = 15;
         ctx.shadowColor = this.color;
         ctx.fill();
@@ -221,13 +204,11 @@ export function HeroSection({
       }
     }
 
-    // Firework class
     class Firework {
       x: number;
       y: number;
       particles: Particle[];
       hue: number;
-
       constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
@@ -235,7 +216,6 @@ export function HeroSection({
         this.hue = Math.random() * 60 + 250;
         this.createParticles();
       }
-
       createParticles() {
         const particleCount = Math.random() * 30 + 40;
         const colors = [
@@ -244,7 +224,6 @@ export function HeroSection({
           `hsl(${this.hue - 20}, 100%, 80%)`,
           "#ffd89b",
         ];
-
         for (let i = 0; i < particleCount; i++) {
           const angle = (Math.PI * 2 * i) / particleCount;
           const velocity = {
@@ -255,26 +234,20 @@ export function HeroSection({
           this.particles.push(new Particle(this.x, this.y, color, velocity));
         }
       }
-
       update() {
         this.particles.forEach((particle, index) => {
           particle.update();
-          if (particle.alpha <= 0) {
-            this.particles.splice(index, 1);
-          }
+          if (particle.alpha <= 0) this.particles.splice(index, 1);
         });
       }
-
       draw() {
         this.particles.forEach((particle) => particle.draw());
       }
-
       isDone() {
         return this.particles.length === 0;
       }
     }
 
-    // Shooting star class
     class ShootingStar {
       x: number;
       y: number;
@@ -282,7 +255,6 @@ export function HeroSection({
       speed: number;
       opacity: number;
       hue: number;
-
       constructor() {
         this.x = 0;
         this.y = 0;
@@ -292,7 +264,6 @@ export function HeroSection({
         this.hue = 0;
         this.reset();
       }
-
       reset() {
         this.x = Math.random() * width;
         this.y = -50;
@@ -301,16 +272,11 @@ export function HeroSection({
         this.opacity = Math.random() * 0.5 + 0.5;
         this.hue = Math.random() * 60 + 250;
       }
-
       update() {
         this.x += this.speed;
         this.y += this.speed * 1.5;
-
-        if (this.y > height || this.x > width) {
-          this.reset();
-        }
+        if (this.y > height || this.x > width) this.reset();
       }
-
       draw() {
         if (!ctx) return;
         ctx.save();
@@ -325,7 +291,6 @@ export function HeroSection({
       }
     }
 
-    // Ambient particle class
     class AmbientParticle {
       x: number;
       y: number;
@@ -334,7 +299,6 @@ export function HeroSection({
       speedY: number;
       opacity: number;
       hue: number;
-
       constructor() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
@@ -344,18 +308,14 @@ export function HeroSection({
         this.opacity = Math.random() * 0.5;
         this.hue = Math.random() * 60 + 250;
       }
-
       update() {
         this.x += this.speedX;
         this.y += this.speedY;
-
         if (this.x < 0 || this.x > width) this.speedX *= -1;
         if (this.y < 0 || this.y > height) this.speedY *= -1;
-
         this.opacity += Math.random() * 0.02 - 0.01;
         this.opacity = Math.max(0.1, Math.min(0.6, this.opacity));
       }
-
       draw() {
         if (!ctx) return;
         ctx.save();
@@ -370,7 +330,6 @@ export function HeroSection({
       }
     }
 
-    // Initialize
     const fireworks: Firework[] = [];
     const shootingStars = Array.from({ length: 3 }, () => new ShootingStar());
     const ambientParticles = Array.from(
@@ -381,26 +340,20 @@ export function HeroSection({
     let lastFireworkTime = 0;
     const fireworkInterval = 2000;
 
-    // Animation loop
     function animate(currentTime: number) {
       if (!ctx) return;
-
       ctx.fillStyle = "rgba(10, 1, 24, 0.1)";
       ctx.fillRect(0, 0, width, height);
 
-      // Ambient particles
-      ambientParticles.forEach((particle) => {
-        particle.update();
-        particle.draw();
+      ambientParticles.forEach((p) => {
+        p.update();
+        p.draw();
+      });
+      shootingStars.forEach((s) => {
+        s.update();
+        s.draw();
       });
 
-      // Shooting stars
-      shootingStars.forEach((star) => {
-        star.update();
-        star.draw();
-      });
-
-      // Auto-create fireworks
       if (currentTime - lastFireworkTime > fireworkInterval) {
         const x = Math.random() * width * 0.6 + width * 0.2;
         const y = Math.random() * height * 0.4 + height * 0.1;
@@ -408,23 +361,17 @@ export function HeroSection({
         lastFireworkTime = currentTime;
       }
 
-      // Update and draw fireworks
       fireworks.forEach((firework, index) => {
         firework.update();
         firework.draw();
-        if (firework.isDone()) {
-          fireworks.splice(index, 1);
-        }
+        if (firework.isDone()) fireworks.splice(index, 1);
       });
 
       animationFrameId = requestAnimationFrame(animate);
     }
 
-    // Click/Touch handlers for interactive fireworks
-    const handleClick = (e: MouseEvent) => {
+    const handleClick = (e: MouseEvent) =>
       fireworks.push(new Firework(e.clientX, e.clientY));
-    };
-
     const handleTouch = (e: TouchEvent) => {
       const touch = e.touches[0];
       fireworks.push(new Firework(touch.clientX, touch.clientY));
@@ -432,23 +379,16 @@ export function HeroSection({
 
     canvas.addEventListener("click", handleClick, { passive: true });
     canvas.addEventListener("touchstart", handleTouch, { passive: true });
-    canvas.addEventListener("touchstart", handleTouch, { passive: true });
 
-    // Initial welcome fireworks
-    setTimeout(() => {
-      fireworks.push(new Firework(width / 2, height / 3));
-    }, 500);
-    setTimeout(() => {
-      fireworks.push(new Firework(width / 3, height / 4));
-    }, 800);
-    setTimeout(() => {
-      fireworks.push(new Firework((width * 2) / 3, height / 4));
-    }, 1100);
+    setTimeout(() => fireworks.push(new Firework(width / 2, height / 3)), 500);
+    setTimeout(() => fireworks.push(new Firework(width / 3, height / 4)), 800);
+    setTimeout(
+      () => fireworks.push(new Firework((width * 2) / 3, height / 4)),
+      1100
+    );
 
-    // Start animation
     animate(0);
 
-    // Cleanup
     return () => {
       window.removeEventListener("resize", resizeHandler);
       canvas.removeEventListener("click", handleClick);
@@ -459,7 +399,6 @@ export function HeroSection({
 
   return (
     <div className="relative min-h-dvh h-screen w-full overflow-hidden">
-      {/* Video Background */}
       {showVideo && (
         <div className="absolute inset-0 bg-[#0a0118]">
           <video
@@ -478,10 +417,8 @@ export function HeroSection({
         </div>
       )}
 
-      {/* Fireworks Canvas Background */}
       {animationStarted && (
         <div className="absolute inset-0 bg-[#0a0118]">
-          {/* Background gradient */}
           <div
             className="absolute inset-0"
             style={{
@@ -492,8 +429,6 @@ export function HeroSection({
               `,
             }}
           />
-
-          {/* Canvas for fireworks animation */}
           <canvas
             ref={canvasRef}
             className="absolute inset-0 w-full h-full"
@@ -502,9 +437,7 @@ export function HeroSection({
         </div>
       )}
 
-      {/* Content overlay */}
       <div className="relative z-10 flex h-full flex-col items-center justify-end pb-10">
-        {/* Main Title */}
         <div className="absolute inset-0 flex items-end justify-center pb-52 pointer-events-none">
           <div className="text-center">
             {fontsLoaded ? (
@@ -518,8 +451,6 @@ export function HeroSection({
                 >
                   {getTranslation(lang, "heroTitle")}
                 </h1>
-
-                {/* Date and Time Info */}
                 <div className="text-white space-y-2">
                   <p
                     className="text-sm md:text-xl font-medium"
@@ -537,14 +468,12 @@ export function HeroSection({
               </>
             ) : (
               <div className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 opacity-0">
-                {/* 폰트 로딩 중에는 완전히 투명하게 처리 */}
                 {getTranslation(lang, "heroTitle")}
               </div>
             )}
           </div>
         </div>
 
-        {/* AI Call Button */}
         <Button
           data-testid="button-ai-call"
           onClick={isConnected ? endCall : handleCallClick}
@@ -562,7 +491,6 @@ export function HeroSection({
             : getTranslation(lang, "aiCallButton")}
         </Button>
 
-        {/* Language Selector */}
         <div className="flex items-center justify-center text-white text-[13px] mt-2">
           {languages.map((language, index) => (
             <div key={language} className="flex items-center">
@@ -576,7 +504,6 @@ export function HeroSection({
               >
                 {languageNames[language]}
               </button>
-
               {index < languages.length - 1 && (
                 <div className="h-3 w-[1px] bg-white/60 mx-0.5" />
               )}

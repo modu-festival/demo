@@ -31,7 +31,7 @@ export function useRealtimeAI() {
   };
 
   /** ===============================
-   *  📞 START CALL
+   * 📞 START CALL
    * =============================== */
   async function startCall(lang: string = "ko") {
     if (isConnecting || isConnected) return;
@@ -40,24 +40,43 @@ export function useRealtimeAI() {
     try {
       console.log(`[Realtime] Starting call for language: ${lang}`);
 
-      // 오디오 안정화
-      const audioContext = new AudioContext();
-      await audioContext.resume();
-      console.log("[Realtime] AudioContext resumed");
+      // 1. [중요] 안드로이드 권한 이슈 해결을 위해 마이크 요청과 토큰 요청을 병렬 시작
+      // 사용자의 클릭 이벤트 컨텍스트가 사라지기 전에 마이크 권한을 요청해야 함
+      const streamPromise = navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          channelCount: 1,
+        },
+      });
 
+      const tokenPromise = fetch(`/session/${lang}`).then((res) => res.json());
+
+      // 2. 두 요청이 모두 완료될 때까지 대기
+      const [stream, data] = await Promise.all([streamPromise, tokenPromise]);
+
+      // 오디오 안정화 (모바일)
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobile) {
-        console.log("[Realtime] Waiting for audio stabilization…");
-        await new Promise((r) => setTimeout(r, 1500));
+        // 마이크 스트림을 얻은 후 잠시 대기 (선택사항, 필요 없으면 제거 가능)
+        // await new Promise((r) => setTimeout(r, 500));
       }
 
-      // 서버에서 ephemeral key 가져오기
-      const tokenRes = await fetch(`/session/${lang}`);
-      const data = await tokenRes.json();
       const EPHEMERAL_KEY: string | undefined = data?.client_secret?.value;
-
       if (!EPHEMERAL_KEY)
         throw new Error("No ephemeral key received from server");
+
+      // 3. [중요] Audio Element를 DOM에 강제 부착 (안드로이드 재생 정책 우회)
+      let audioEl = audioRef.current;
+      if (!audioEl) {
+        audioEl = document.createElement("audio");
+        audioEl.autoplay = true;
+        // 화면에는 보이지 않게 처리
+        audioEl.style.display = "none";
+        document.body.appendChild(audioEl);
+        audioRef.current = audioEl;
+      }
 
       // WebRTC Peer
       const pc = new RTCPeerConnection({
@@ -70,17 +89,12 @@ export function useRealtimeAI() {
       });
       peerRef.current = pc;
 
-      // ====== 오디오 출력 ======
-      const audio = new Audio();
-      audio.autoplay = true;
-      audio.volume = 0.9;
-      audioRef.current = audio;
-
+      // 오디오 트랙 수신 시 재생
       pc.ontrack = (event) => {
-        const stream = event.streams[0];
-        if (stream) {
-          audio.srcObject = stream;
-          audio.play().catch((e) => console.warn("Audio play failed:", e));
+        const remoteStream = event.streams[0];
+        if (audioEl && remoteStream) {
+          audioEl.srcObject = remoteStream;
+          audioEl.play().catch((e) => console.warn("Audio play failed:", e));
         }
       };
 
@@ -94,19 +108,7 @@ export function useRealtimeAI() {
         }
       };
 
-      // ====== 마이크 입력 ======
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          // 브라우저 지원 가능할 때만 적용됨
-          // @ts-ignore
-          voiceIsolation: true,
-          channelCount: 1,
-        },
-      });
-
+      // 획득한 마이크 스트림을 PeerConnection에 추가
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
       // ====== DataChannel ======
@@ -116,11 +118,6 @@ export function useRealtimeAI() {
       ch.onopen = () => {
         console.log("[Realtime] Data channel open");
 
-        /** =========================
-         *  — 서버 VAD 설정 둔감하게
-         *  — Whisper transcription 활성화
-         *  — tools 등록 포함
-         * ========================= */
         const sessionUpdateEvent = {
           type: "session.update",
           session: {
@@ -164,7 +161,6 @@ export function useRealtimeAI() {
 
         ch.send(JSON.stringify(sessionUpdateEvent));
 
-        // ====== AI 인사 메시지 & 초기 응답 (현재 너 로직 유지) ======
         setTimeout(() => {
           ch.send(
             JSON.stringify({
@@ -193,7 +189,6 @@ export function useRealtimeAI() {
         }, 700);
       };
 
-      // ====== AI → function_call 처리 ======
       ch.onmessage = async (ev) => {
         try {
           const msg = JSON.parse(ev.data);
@@ -227,6 +222,8 @@ export function useRealtimeAI() {
       // ====== SDP Offer / Answer ======
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
+
+      // ICE Gathering 대기 (필요시)
       await waitForIceGatheringComplete(pc);
 
       const model = "gpt-4o-realtime-preview-2025-06-03";
@@ -261,7 +258,7 @@ export function useRealtimeAI() {
   }
 
   /** ===============================
-   *  📞 END CALL
+   * 📞 END CALL
    * =============================== */
   function endCall() {
     console.log("[Realtime] Ending call…");
@@ -278,9 +275,14 @@ export function useRealtimeAI() {
         peerRef.current = null;
       }
 
+      // [중요] 오디오 엘리먼트 정리 및 DOM 제거
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.srcObject = null;
+        if (audioRef.current.parentNode) {
+          audioRef.current.parentNode.removeChild(audioRef.current);
+        }
+        audioRef.current = null;
       }
     } catch (err) {
       console.warn("[Realtime] endCall cleanup error:", err);
