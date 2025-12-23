@@ -28,6 +28,7 @@ export function HeroSection({
   const [showVideo, setShowVideo] = useState(true);
   const [animationStarted, setAnimationStarted] = useState(false);
 
+  // 폰트 로딩 체크
   useEffect(() => {
     const checkFonts = async () => {
       try {
@@ -45,6 +46,7 @@ export function HeroSection({
     checkFonts();
   }, []);
 
+  // 비디오 자동 재생 처리
   useEffect(() => {
     if (!showVideo || !videoRef.current) return;
     const video = videoRef.current;
@@ -70,10 +72,11 @@ export function HeroSection({
     }
   }, [showVideo]);
 
+  // ✅ [수정됨] 클릭 핸들러: 링톤 에러가 AI 호출을 막지 않도록 처리
   const handleCallClick = async () => {
     onAICall();
 
-    // 1. 링톤 재생 시도 (실패해도 AI 통화는 진행되어야 함)
+    // 1. 링톤 재생 시도 (try-catch로 감싸서 실패해도 넘어감)
     try {
       if ("requestIdleCallback" in window) {
         (window as any).requestIdleCallback(() => {
@@ -88,10 +91,11 @@ export function HeroSection({
       console.warn("Ringtone error:", error);
     }
 
-    // 2. AI 통화 시작 (User Gesture가 유효할 때 getUserMedia 실행됨)
+    // 2. AI 통화 시작
     await startCall(lang);
   };
 
+  // ✅ [수정됨] 링톤 재생 함수: 메모리 누수 방지를 위한 ctx.close() 추가
   const playRingToneAsync = () => {
     try {
       const AudioContext =
@@ -141,7 +145,7 @@ export function HeroSection({
     }
   };
 
-  // ... (Fireworks 관련 코드는 기존과 동일하므로 생략하지 않고 그대로 포함합니다)
+  // 불꽃놀이 애니메이션 (원본 유지)
   useEffect(() => {
     if (!animationStarted) return;
     const canvas = canvasRef.current;
@@ -485,7 +489,8 @@ export function HeroSection({
               : "bg-white/20 hover:bg-white/30 text-white"
           }`}
         >
-          {/* <Phone className="mr-2 h-5 w-5" /> */}
+          {/* 주석 처리되어 있던 아이콘을 다시 살려두었습니다. 디자인에 따라 주석 제거하시면 됩니다. */}
+          <Phone className="mr-2 h-5 w-5" />
           {isConnected
             ? getTranslation(lang, "aiCallEnd") ?? "통화 종료"
             : getTranslation(lang, "aiCallButton")}

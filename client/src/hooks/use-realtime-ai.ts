@@ -38,10 +38,9 @@ export function useRealtimeAI() {
     setIsConnecting(true);
 
     try {
-      console.log(`[Realtime] Starting call for language: ${lang}`);
+      console.log(`[Realtime] 1. Starting call for language: ${lang}`);
 
-      // 1. [중요] 안드로이드 권한 이슈 해결을 위해 마이크 요청과 토큰 요청을 병렬 시작
-      // 사용자의 클릭 이벤트 컨텍스트가 사라지기 전에 마이크 권한을 요청해야 함
+      // 1. 마이크 권한 요청 & 토큰 발급 병렬 시작 (제스처 유효 시간 확보)
       const streamPromise = navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -53,32 +52,28 @@ export function useRealtimeAI() {
 
       const tokenPromise = fetch(`/session/${lang}`).then((res) => res.json());
 
-      // 2. 두 요청이 모두 완료될 때까지 대기
+      console.log("[Realtime] 2. Waiting for permissions and token...");
+
+      // 2. 대기
       const [stream, data] = await Promise.all([streamPromise, tokenPromise]);
 
-      // 오디오 안정화 (모바일)
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobile) {
-        // 마이크 스트림을 얻은 후 잠시 대기 (선택사항, 필요 없으면 제거 가능)
-        // await new Promise((r) => setTimeout(r, 500));
-      }
+      console.log("[Realtime] 3. Permissions granted & Token received");
 
       const EPHEMERAL_KEY: string | undefined = data?.client_secret?.value;
       if (!EPHEMERAL_KEY)
         throw new Error("No ephemeral key received from server");
 
-      // 3. [중요] Audio Element를 DOM에 강제 부착 (안드로이드 재생 정책 우회)
+      // 3. Audio Element DOM 부착 (안드로이드 정책 우회)
       let audioEl = audioRef.current;
       if (!audioEl) {
         audioEl = document.createElement("audio");
         audioEl.autoplay = true;
-        // 화면에는 보이지 않게 처리
         audioEl.style.display = "none";
         document.body.appendChild(audioEl);
         audioRef.current = audioEl;
       }
 
-      // WebRTC Peer
+      // WebRTC Peer 생성
       const pc = new RTCPeerConnection({
         iceServers: [
           { urls: "stun:stun.l.google.com:19302" },
@@ -89,29 +84,20 @@ export function useRealtimeAI() {
       });
       peerRef.current = pc;
 
-      // 오디오 트랙 수신 시 재생
+      // 트랙 수신 시 재생
       pc.ontrack = (event) => {
         const remoteStream = event.streams[0];
         if (audioEl && remoteStream) {
+          console.log("[Realtime] Audio track received");
           audioEl.srcObject = remoteStream;
           audioEl.play().catch((e) => console.warn("Audio play failed:", e));
         }
       };
 
-      pc.onconnectionstatechange = () => {
-        console.log("[Realtime] Connection state:", pc.connectionState);
-        if (
-          pc.connectionState === "failed" ||
-          pc.connectionState === "disconnected"
-        ) {
-          endCall();
-        }
-      };
-
-      // 획득한 마이크 스트림을 PeerConnection에 추가
+      // 마이크 트랙 추가
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
-      // ====== DataChannel ======
+      // DataChannel 설정
       const ch = pc.createDataChannel("response");
       channelRef.current = ch;
 
@@ -127,9 +113,7 @@ export function useRealtimeAI() {
               prefix_padding_ms: 300,
               silence_duration_ms: 800,
             },
-            input_audio_transcription: {
-              model: "whisper-1",
-            },
+            input_audio_transcription: { model: "whisper-1" },
             tools: [
               {
                 type: "function",
@@ -158,7 +142,6 @@ export function useRealtimeAI() {
             ],
           },
         };
-
         ch.send(JSON.stringify(sessionUpdateEvent));
 
         setTimeout(() => {
@@ -177,14 +160,13 @@ export function useRealtimeAI() {
                         : lang === "ja"
                         ? "通話が接続されました。準備が完了したら…"
                         : lang === "zh"
-                        ? "通话已连接。准备好后…"
+                        ? "通话已连接。请打招呼。"
                         : "통화가 연결되었습니다. 초기 응답 준비 후 인사해주세요.",
                   },
                 ],
               },
             })
           );
-
           ch.send(JSON.stringify({ type: "response.create" }));
         }, 700);
       };
@@ -192,7 +174,6 @@ export function useRealtimeAI() {
       ch.onmessage = async (ev) => {
         try {
           const msg = JSON.parse(ev.data);
-
           if (
             msg.type === "response.function_call_arguments.done" &&
             msg.name in fns
@@ -200,7 +181,6 @@ export function useRealtimeAI() {
             const fn = fns[msg.name as keyof FnMap];
             const args = JSON.parse(msg.arguments);
             const result = fn(args);
-
             ch.send(
               JSON.stringify({
                 type: "conversation.item.create",
@@ -211,83 +191,77 @@ export function useRealtimeAI() {
                 },
               })
             );
-
             ch.send(JSON.stringify({ type: "response.create" }));
           }
-        } catch (error) {
-          console.error("[Realtime] Data channel message error:", error);
+        } catch (e) {
+          console.error(e);
         }
       };
 
-      // ====== SDP Offer / Answer ======
+      // SDP Offer 생성
+      console.log("[Realtime] 4. Creating Offer...");
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      // ICE Gathering 대기 (필요시)
+      console.log("[Realtime] 5. Waiting for ICE Candidates...");
+
+      // ✅ [핵심] ICE Gathering 타임아웃 적용 (최대 2초 대기)
       await waitForIceGatheringComplete(pc);
 
+      console.log("[Realtime] 6. Sending SDP to OpenAI...");
+
+      const baseUrl = "https://api.openai.com/v1/realtime";
       const model = "gpt-4o-realtime-preview-2025-06-03";
 
-      const sdpResponse = await fetch(
-        `https://api.openai.com/v1/realtime?model=${model}`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${EPHEMERAL_KEY}`,
-            "Content-Type": "application/sdp",
-          },
-          body: offer.sdp,
-        }
-      );
+      const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${EPHEMERAL_KEY}`,
+          "Content-Type": "application/sdp",
+        },
+        body: offer.sdp,
+      });
 
-      const answer = {
-        type: "answer" as RTCSdpType,
-        sdp: await sdpResponse.text(),
-      };
+      if (!sdpResponse.ok) {
+        throw new Error(`Server responded with ${sdpResponse.status}`);
+      }
 
-      await pc.setRemoteDescription(answer);
+      console.log("[Realtime] 7. Received Answer SDP");
+      const answerSdp = await sdpResponse.text();
+      await pc.setRemoteDescription({ type: "answer", sdp: answerSdp });
 
       setIsConnected(true);
-      console.log("[Realtime] Connected successfully");
+      console.log("[Realtime] ✅ Connected successfully!");
     } catch (error) {
       console.error("[Realtime] startCall error:", error);
+      alert(
+        `연결 오류: ${error instanceof Error ? error.message : "알 수 없음"}`
+      );
       endCall();
     } finally {
       setIsConnecting(false);
     }
   }
 
-  /** ===============================
-   * 📞 END CALL
-   * =============================== */
   function endCall() {
     console.log("[Realtime] Ending call…");
-
-    try {
-      if (channelRef.current) {
-        channelRef.current.close();
-        channelRef.current = null;
-      }
-
-      if (peerRef.current) {
-        peerRef.current.getSenders().forEach((s) => s.track?.stop());
-        peerRef.current.close();
-        peerRef.current = null;
-      }
-
-      // [중요] 오디오 엘리먼트 정리 및 DOM 제거
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.srcObject = null;
-        if (audioRef.current.parentNode) {
-          audioRef.current.parentNode.removeChild(audioRef.current);
-        }
-        audioRef.current = null;
-      }
-    } catch (err) {
-      console.warn("[Realtime] endCall cleanup error:", err);
+    if (channelRef.current) {
+      channelRef.current.close();
+      channelRef.current = null;
     }
-
+    if (peerRef.current) {
+      peerRef.current.getSenders().forEach((s) => s.track?.stop());
+      peerRef.current.close();
+      peerRef.current = null;
+    }
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.srcObject = null;
+      if (audioRef.current.parentNode) {
+        audioRef.current.parentNode.removeChild(audioRef.current);
+      }
+      audioRef.current = null;
+    }
     setIsConnected(false);
     setIsConnecting(false);
   }
@@ -295,17 +269,33 @@ export function useRealtimeAI() {
   return { startCall, endCall, isConnecting, isConnected };
 }
 
-/** ICE Gathering 완료 대기 */
+/** * ICE Gathering 완료 대기 함수 (타임아웃 추가 버전)
+ */
 function waitForIceGatheringComplete(pc: RTCPeerConnection): Promise<void> {
-  if (pc.iceGatheringState === "complete") return Promise.resolve();
-
   return new Promise((resolve) => {
+    if (pc.iceGatheringState === "complete") {
+      resolve();
+      return;
+    }
+
     const check = () => {
       if (pc.iceGatheringState === "complete") {
         pc.removeEventListener("icegatheringstatechange", check);
         resolve();
       }
     };
+
     pc.addEventListener("icegatheringstatechange", check);
+
+    // ⏳ 2초가 지나도 완료 안 되면 강제 진행
+    setTimeout(() => {
+      if (pc.iceGatheringState !== "complete") {
+        console.warn(
+          "[Realtime] ICE gathering timed out, proceeding anyway..."
+        );
+        pc.removeEventListener("icegatheringstatechange", check);
+        resolve();
+      }
+    }, 2000);
   });
 }
